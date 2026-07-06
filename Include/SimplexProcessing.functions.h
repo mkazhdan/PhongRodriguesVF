@@ -72,13 +72,22 @@ namespace MishaK
 		// A specialization of the dot-product function for inputs that are doubles
 		double DotProduct( double v1 , double v2 );
 
-
 		// The identity map
 		template< typename T > T Identity( const T & v ){ return v; }
 
 		// Basic functionality for summing samples with a variable number of samples
 		template< typename T , HasArray<T > Samples >
 		T SampleSum( Samples && S , unsigned int N );
+
+		template< HasDotProduct T >
+		T NormalizedValue( const T & t );
+
+		template< unsigned int K , HasDotProduct T >
+		Differential< K , T > DNormalizedValue( T t , Differential< K , T > dt );
+
+		// Computes the covariant derivative using the connection coefficients, the coefficients, and their derivatives
+		template< unsigned int K >
+		SquareMatrix< double , K > CovariantDerivative( AutoDiff::Tensor< K , K , K > gamma , Point< double , K > coords , Differential< K , Point< double , K > > dCoords );
 
 #include "SimplexProcessing.functions.inl"
 	}

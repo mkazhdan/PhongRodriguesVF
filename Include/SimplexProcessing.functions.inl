@@ -180,3 +180,48 @@ T SampleSum( Samples && S , unsigned int N )
 	for( unsigned int n=0 ; n<N ; n++ ) v += S[n];
 	return v;
 }
+
+template< HasDotProduct T >
+T NormalizedValue( const T & t )
+{
+	return t / sqrt( DotProduct( t , t ) );
+}
+
+template< unsigned int K , HasDotProduct T >
+Differential< K , T > DNormalizedValue( T t , Differential< K , T > dt )
+{
+	// N(x) = F(x) / < F(x) , F(x) >^0.5
+	// dN(x) = dF(x) / < F(x) , F(x) >^0.5 - 0.5 * F(x) / < F(x) , F(x) >^1.5 * 2 * dF(x)
+	//       = dF(x) / < F(x) , F(x) >^0.5 - F(x) / < F(x) , F(x) >^1.5 * dF(x)
+
+	double l = sqrt( DotProduct( t , t ) );
+	t /= l;
+	for( unsigned int k=0 ; k<K ; k++ )
+	{
+		// Normalize
+		dt[k] /= l;
+		// Project out the component in direction f
+		dt[k] -= DotProduct( dt[k] , t ) * t;
+	}
+	return dt;
+}
+
+template< unsigned int K >
+SquareMatrix< double , K > CovariantDerivative( AutoDiff::Tensor< K , K , K > gamma , Point< double , K > coords , Differential< K , Point< double , K > > dCoords )
+{
+	// Given a tangent vector field:
+	//		v = \sum_k f_k * e_k,
+	// the covariant derivative along direction e_i is
+	//		dv/de_i = d(\sum_k f_k * e_k)/de_i
+	//              = \sum_k df_k/de_i * e_k + f_k * de_k/de_i
+	//              = \sum_k df_k/de_i * e_k + f_k * \sum_l e_l * \Gamma_{ki}^l
+
+	SquareMatrix< double , K > d;
+
+	for( unsigned int i=0 ; i<K ; i++ )
+	{
+		for( unsigned int k=0 ; k<K ; k++ ) d(i,k) += dCoords[i][k];
+		for( unsigned int k=0 ; k<K ; k++ ) for( unsigned int l=0 ; l<K ; l++ ) d(i,l) += coords[k] * gamma(k,i,l);
+	}
+	return d;
+}

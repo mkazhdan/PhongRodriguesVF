@@ -64,7 +64,7 @@ namespace MishaK
 			};
 
 			// Return a function evaluating the differential
-			Differential differential( void ) const { return Differential( static_cast< const Field & >( *this ) ); }
+			Differential differential( void ) const requires HasSimplexFunctionDifferential< Field , K , T > { return Differential( static_cast< const Field & >( *this ) ); }
 		};
 
 		////////////////////////////////////////////////////
@@ -74,14 +74,18 @@ namespace MishaK
 		template< unsigned int K , HasDotProduct T , HasSimplexFunction< K , T > Field >
 		struct NormalizationField : public DifferentialFieldWrapper< K , T , NormalizationField< K , T , Field > >
 		{
+			static T Value( const Field & f , Position< K > p ){ return NormalizedValue( f(p) ); }
+			static Differential< K , T > DValue( const Field & f , Position< K > p  ) requires HasSimplexFunctionDifferential< Field , K , T > { return DNormalizedValue( f(p) , f.d(p) ); }
+
 			// Constructor
 			NormalizationField( const Field & f ) : _f(f){}
 
 			// Value evaluation
-			T operator()( Position< K > p ) const { T t = _f(p) ; return t / sqrt( DotProduct( t , t ) ); }
+			T operator()( Position< K > p ) const { return Value( _f , p ); }
 
 			// Derivative evaluation
-			Differential< K , T > d( Position< K > p ) const;
+			Differential< K , T > d( Position< K > p ) const requires HasSimplexFunctionDifferential< Field , K , T > { return DValue( _f , p ); }
+
 		protected:
 			Field _f;
 		};
@@ -101,24 +105,22 @@ namespace MishaK
 			using T = _T;
 
 			// [Class members]
+			static T Value( const T x[K+1] , Position< K > p );
+			static Differential< K , T > DValue( const T x[K+1] , Position< K > p );
 
 			// The constructors
 			LinearInterpolant( void );
 			LinearInterpolant( const T x[K+1] );
 
 			// The evaluation of the linear interpolation at a barycentric coordinate
-			T operator()( Position< K > p ) const { return Value( p , _x ); }
+			T operator()( Position< K > p ) const { return Value( _x , p ); }
 
 			// The evaluation differential of the linear interpolant
-			Differential< K , T > d( Position< K > p ) const { return DValue( p , _x ); }
+			Differential< K , T > d( Position< K > p ) const { return DValue( _x , p ); }
 
 			// Returns access to the coefficient at the prescribed vertex
 			double &operator[]( unsigned int k ){ return _x[k]; }
 			const double &operator[]( unsigned int k ) const { return _x[k]; }
-
-			// [Class members]
-			static T Value( Position< K > p , const T x[K+1] );
-			static Differential< K , T > DValue( Position< K > p , const T x[K+1] );
 
 		protected:
 			T _x[K+1];
@@ -174,14 +176,18 @@ namespace MishaK
 			static const unsigned int Dim = K+1;
 			using T = Matrix< double , K , Dim >;
 
+			static T Value( const Point< double , Dim > & normal , const Point< double , Dim > normals[K+1] , const Matrix< double , K , Dim > & xForm , Position< K > p );
+			static Differential< K , T > DValue( const Point< double , Dim > & normal , const Point< double , Dim > normals[K+1] , const Matrix< double , K , Dim > & xForm , Position< K > p );
+
 			PhongRodriguesIntrinsicToExtrinsicTangentXFormField( void ){}
 			PhongRodriguesIntrinsicToExtrinsicTangentXFormField( const Point< double , Dim > vertices[K+1] , const Point< double , Dim > normals[K+1] );
 			PhongRodriguesIntrinsicToExtrinsicTangentXFormField( const Simplex< double , Dim , K > & vertices , const Simplex< double , Dim , K > & normals );
-			T operator()( Position< K > p ) const;
-			Differential< K , T > d( Position< K > p ) const;
+
+			T operator()( Position< K > p ) const { return Value( _normal , _normals , _xForm , p ); }
+			Differential< K , T > d( Position< K > p ) const { return DValue( _normal , _normals , _xForm , p ); }
+
 		protected:
-			LinearInterpolant< K , Point< double , Dim > > _N;
-			Point< double , Dim > _normal;
+			Point< double , Dim > _normal , _normals[K+1];
 			Matrix< double , K , Dim > _xForm;
 		};
 
@@ -189,57 +195,76 @@ namespace MishaK
 		// A field giving the inverse of the (pseudo) differential of the embedding //
 		//////////////////////////////////////////////////////////////////////////////
 		template< unsigned int K >
-		struct PhongRodriguesExtrinsicToIntrinsicTangentXFormField : public DifferentialFieldWrapper< K , Matrix< double , K+1 , K > , PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K > >
+		struct PhongRodriguesExtrinsicToIntrinsicTangentXFormField
+			: public DifferentialFieldWrapper< K , Matrix< double , K+1 , K > , PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K > >
+			, public PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >
 		{
 			static const unsigned int Dim = K+1;
 			using T = Matrix< double , Dim , K >;
 
+			using Differential = DifferentialFieldWrapper< K , Matrix< double , K+1 , K > , PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K > >::Differential;
+			using DifferentialFieldWrapper< K , Matrix< double , K+1 , K > , PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K > >::differential;
+
+			static T Value( const SquareMatrix< double , K > & gInv , const Point< double , Dim > & normal , const Point< double , Dim > normals[K+1] , const Matrix< double , K , Dim > & xForm , Position< K > p );
+			static SimplexProcessing::Differential< K , T > DValue( const SquareMatrix< double , K > & gInv , const Point< double , Dim > & normal , const Point< double , Dim > normals[K+1] , const Matrix< double , K , Dim > & xForm , Position< K > p );
+
 			PhongRodriguesExtrinsicToIntrinsicTangentXFormField( void ){}
 			PhongRodriguesExtrinsicToIntrinsicTangentXFormField( const Point< double , Dim > vertices[K+1] , const Point< double , Dim > normals[K+1] );
 			PhongRodriguesExtrinsicToIntrinsicTangentXFormField( const Simplex< double , Dim , K > & vertices , const Simplex< double , Dim , K > & normals );
-			T operator()( Position< K > p ) const;
-			Differential< K , T > d( Position< K > p ) const;
+
+			T operator()( Position< K > p ) const { return Value( _gInv , _normal , _normals , _xForm , p ); }
+			SimplexProcessing::Differential< K , T > d( Position< K > p ) const{ return DValue( _gInv , _normal , _normals , _xForm , p ); }
 		protected:
-			PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >  _i2e;
 			SquareMatrix< double , K > _gInv;
+			using PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::_normal;
+			using PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::_normals;
+			using PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::_xForm;
 		};
 
 		//////////////////////////////////////////////////////////////////////////////////////////////////
 		// A field giving the connection coefficients defined by (pseudo) differential of the embedding //
 		//////////////////////////////////////////////////////////////////////////////////////////////////
 		template< unsigned int K >
-		struct ConnectionCoefficientField
+		struct ConnectionCoefficientField : public PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >
 		{
 			static const unsigned int Dim = K+1;
 			using T = AutoDiff::Tensor< K , K , K >;
 
+			static T Value( const SquareMatrix< double , K > & gInv , const Point< double , Dim > & normal , const Point< double , Dim > normals[K+1] , const Matrix< double , K , Dim > & xForm , Position< K > p );
+
 			ConnectionCoefficientField( const Point< double , Dim > vertices[K+1] , const Point< double , Dim > normals[K+1] );
 			ConnectionCoefficientField( const Simplex< double , Dim , K > & vertices , const Simplex< double , Dim , K > & normals );
-			T operator()( Position< K > p ) const;
+
+			T operator()( Position< K > p ) const { return Value( _gInv , _normal , _normals , _xForm , p ); }
 
 		protected:
-			PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K > _i2e;
 			SquareMatrix< double , K > _gInv;
+			using PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::_normal;
+			using PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::_normals;
+			using PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::_xForm;
 		};
 
 		///////////////////////////////////////
 		// The second fundamental form field //
 		///////////////////////////////////////
 		template< unsigned int K , bool DifferentiateNormals=true >
-		struct SecondFundamentalFormField
+		struct SecondFundamentalFormField : public PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >
 		{
 			static const unsigned int Dim = K+1;
 			using T = SquareMatrix< double , K >;
+
+			static T Value( const Point< double , Dim > & normal , const Point< double , Dim > normals[K+1] , const Matrix< double , K , Dim > & xForm , Position< K > p );
 
 			SecondFundamentalFormField( const Point< double , Dim > vertices[K+1] , const Point< double , Dim > normals[K+1] );
 			SecondFundamentalFormField( const Simplex< double , Dim , K > & vertices , const Simplex< double , Dim , K > & normals );
 
 			// Given a simplex, returns a function returning the second fundamental form (expressed in the space of tangent vector fields) at any point in the simplex
-			T operator()( Position< K > p ) const;
+			T operator()( Position< K > p ) const { return Value( _normal , _normals , _xForm , p ); }
 
 		protected:
-			PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K > _i2e;
-			NormalizationField< K , Point< double , Dim > , LinearInterpolant< K , Point< double , Dim > > > _normals;
+			using PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::_normal;
+			using PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::_normals;
+			using PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::_xForm;
 		};
 
 		// FUNCTIONS OF THE MESH GEOMETRY
@@ -252,21 +277,32 @@ namespace MishaK
 		// Coefficients of a GENERIC vector-field vector field w.r.t. the coordinate axes //
 		////////////////////////////////////////////////////////////////////////////////////
 		template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
-		struct IntrinsicVectorField : public DifferentialFieldWrapper< K , Point< double , K > , IntrinsicVectorField< K , N , VectorField > >
+		struct IntrinsicVectorField
+			: public DifferentialFieldWrapper< K , Point< double , K > , IntrinsicVectorField< K , N , VectorField > >
+			, public PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >
 		{
 			using T = Point< double , K >;
 
-			IntrinsicVectorField( const Point< double , N > vertices[K+1] , const Point< double , N > normals[K+1] , const VectorField & vf ) : _e2i( vertices , normals ) , _vf( vf ) {}
+			using Differential = DifferentialFieldWrapper< K , Point< double , K > , IntrinsicVectorField< K , N , VectorField > >::Differential;
+			using DifferentialFieldWrapper< K , Point< double , K > , IntrinsicVectorField< K , N , VectorField > >::differential;
+
+			static T Value( const SquareMatrix< double , K > & gInv , const Point< double , N > & normal , const Point< double , N > normals[K+1] , const Matrix< double , K , N > & xForm , const VectorField & vf , Position< K > p );
+			static SimplexProcessing::Differential< K , T > DValue( const SquareMatrix< double , K > & gInv , const Point< double , N > & normal , const Point< double , N > normals[K+1] , const Matrix< double , K , N > & xForm , const VectorField & vf , Position< K > p );
+
+			IntrinsicVectorField( const Point< double , N > vertices[K+1] , const Point< double , N > normals[K+1] , const VectorField & vf ) : PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >( vertices , normals ) , _vf( vf ) {}
 			IntrinsicVectorField( const Simplex< double , N , K > & vertices , const Simplex< double , N , K > & normals , const VectorField & vf ) : IntrinsicVectorField( &vertices[0] , &normals[0] , vf ){}
 
 			// The evaluation of the vector field
-			T operator()( Position< K > p ) const;
+			T operator()( Position< K > p ) const { return Value( _gInv , _normal , _normals , _xForm , _vf , p ); }
 
 			// The evaluation of the differential of the vector field
-			Differential< K , T > d( Position< K > p ) const;
+			SimplexProcessing::Differential< K , T > d( Position< K > p ) const { return DValue( _gInv , _normal , _normals , _xForm , _vf , p ); }
 
 		protected:
-			PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K > _e2i;
+			using PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::_gInv;
+			using PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::_normal;
+			using PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::_normals;
+			using PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::_xForm;
 			VectorField _vf;
 		};
 
@@ -274,15 +310,22 @@ namespace MishaK
 		// The (intrinsic) covariant derivative of a GENERIC vector-field //
 		////////////////////////////////////////////////////////////////////
 		template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
-		struct CovariantDerivativeField
+		struct CovariantDerivativeField : public PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >
 		{
 			using T = SquareMatrix< double , K >;
 
-			CovariantDerivativeField( const Point< double , N > vertices[K+1] , const Point< double , N > normals[K+1] , const VectorField & vf ) : _e2i( vertices , normals ) , _vf( vf ) {}
+			static T Value( const SquareMatrix< double , K > & gInv , const Point< double , N > & normal , const Point< double , N > normals[K+1] , const Matrix< double , K , N > & xForm , const VectorField & vf , Position< K > p );
+
+			CovariantDerivativeField( const Point< double , N > vertices[K+1] , const Point< double , N > normals[K+1] , const VectorField & vf ) : PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >( vertices , normals ) , _vf( vf ) {}
 			CovariantDerivativeField( const Simplex< double , N , K > & vertices , const Simplex< double , N , K > & normals , const VectorField & vf ) : CovariantDerivativeField( &vertices[0] , &normals[0] , vf ){}
-			T operator()( Position< K > p ) const;
+
+			T operator()( Position< K > p ) const { return Value( _gInv , _normal , _normals , _xForm , _vf , p ); }
+
 		protected:
-			PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K > _e2i;
+			using PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::_gInv;
+			using PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::_normal;
+			using PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::_normals;
+			using PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::_xForm;
 			VectorField _vf;
 		};
 
@@ -290,15 +333,22 @@ namespace MishaK
 		// The (extrinsic) covariant directional derivative of one GENERIC vector-field with respect to another //
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////
 		template< unsigned int K , unsigned int N , HasSimplexFunction< K , Point< double , N > > DirectionField , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
-		struct CovariantDirectionalDerivativeField
+		struct CovariantDirectionalDerivativeField : public PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >
 		{
 			using T = Point< double , N >;
 
-			CovariantDirectionalDerivativeField( const Point< double , N > vertices[K+1] , const Point< double , N > normals[K+1] , const DirectionField & dir , const VectorField & vf ) : _e2i( vertices , normals ) , _dir(dir) , _vf( vf ) {};
+			static T Value( const SquareMatrix< double , K > & gInv , const Point< double , N > & normal , const Point< double , N > normals[K+1] , const Matrix< double , K , N > & xForm , const DirectionField & dir , const VectorField & vf , Position< K > p );
+
+			CovariantDirectionalDerivativeField( const Point< double , N > vertices[K+1] , const Point< double , N > normals[K+1] , const DirectionField & dir , const VectorField & vf ) : PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >( vertices , normals ) , _dir(dir) , _vf( vf ) {};
 			CovariantDirectionalDerivativeField( const Simplex< double , N , K > & vertices , const Simplex< double , N , K > & normals , const DirectionField & dir , const VectorField & vf ) : CovariantDirectionalDerivativeField( &vertices[0] , &normals[0] , dir , vf ){}
-			T operator()( Position< K > p ) const;
+
+			T operator()( Position< K > p ) const { return Value( _gInv , _normal , _normals , _xForm , _dir , _vf , p ); }
+
 		protected:
-			PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K > _e2i;
+			using PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::_gInv;
+			using PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::_normal;
+			using PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::_normals;
+			using PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::_xForm;
 			DirectionField _dir;
 			VectorField _vf;
 		};
@@ -307,30 +357,44 @@ namespace MishaK
 		// The divergence of a GENERIC vector-field //
 		//////////////////////////////////////////////
 		template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
-		struct DivergenceField
+		struct DivergenceField : public CovariantDerivativeField< K , N , VectorField >
 		{
 			using T = double;
 
-			DivergenceField( const Point< double , N > vertices[K+1] , const Point< double , N > normals[K+1] , const VectorField & vf ) : _dvf( vertices , normals , vf ) {};
+			static T Value( const SquareMatrix< double , K > & gInv , const Point< double , N > & normal , const Point< double , N > normals[K+1] , const Matrix< double , K , N > & xForm , const VectorField & vf , Position< K > p );
+
+			DivergenceField( const Point< double , N > vertices[K+1] , const Point< double , N > normals[K+1] , const VectorField & vf ) : CovariantDerivativeField< K , N , VectorField >( vertices , normals , vf ) {};
 			DivergenceField( const Simplex< double , N , K > & vertices , const Simplex< double , N , K > & normals , const VectorField & vf ) : DivergenceField( &vertices[0] , &normals[0] , vf ){}
-			T operator()( Position< K > p ) const;
+
+			T operator()( Position< K > p ) const { return Value( _gInv , _normal , _normals , _xForm , _vf , p ); }
 		protected:
-			CovariantDerivativeField< K , N , VectorField > _dvf;
+			using CovariantDerivativeField< K , N , VectorField >::_gInv;
+			using CovariantDerivativeField< K , N , VectorField >::_normal;
+			using CovariantDerivativeField< K , N , VectorField >::_normals;
+			using CovariantDerivativeField< K , N , VectorField >::_xForm;
+			using CovariantDerivativeField< K , N , VectorField >::_vf;
 		};
 
 		//////////////////////////////////////////////////////////
 		// The (extrinsic) bracket of two GENERIC vector-fields //
 		//////////////////////////////////////////////////////////
 		template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField1 , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField2 >
-		struct BracketField
+		struct BracketField : public PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >
 		{
 			using T = Point< double , N >;
 
-			BracketField( const Point< double , N > vertices[K+1] , const Point< double , N > normals[K+1] , const VectorField1 & vf1 , const VectorField1 & vf2 ) : _e2i( vertices , normals ) , _vf1(vf1) , _vf2(vf2) {};
+			static T Value( const SquareMatrix< double , K > & gInv , const Point< double , N > & normal , const Point< double , N > normals[K+1] , const Matrix< double , K , N > & xForm , const VectorField1 & vf1 , const VectorField2 & vf2 , Position< K > p );
+
+			BracketField( const Point< double , N > vertices[K+1] , const Point< double , N > normals[K+1] , const VectorField1 & vf1 , const VectorField1 & vf2 ) : PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >( vertices , normals ) , _vf1(vf1) , _vf2(vf2) {};
 			BracketField( const Simplex< double , N , K > & vertices , const Simplex< double , N , K > & normals , const VectorField1 & vf1 , const VectorField1 & vf2 ) : BracketField( &vertices[0] , &normals[0] , vf1 , vf2 ){}
-			T operator()( Position< K > p ) const;
+
+			T operator()( Position< K > p ) const { return Value( _gInv , _normal , _normals , _xForm , _vf1 , _vf2 , p ); }
+
 		protected:
-			PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K > _e2i;
+			using PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::_gInv;
+			using PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::_normal;
+			using PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::_normals;
+			using PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::_xForm;
 			VectorField1 _vf1;
 			VectorField2 _vf2;
 		};
