@@ -1,6 +1,7 @@
 .vs/
 Bin/
 Data/
+Scratch/
 *.filters
 *.user
 *.o

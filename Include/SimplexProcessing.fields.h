@@ -36,38 +36,6 @@ namespace MishaK
 		/////////////////
 		// HELPER CLASSES 
 
-		//////////////////////////////////////////////////////////////////////////////////////
-		// A structure for extracting the differential of a field as a stand-alone function //
-		// [NOTE] The field is stored by value                                              //
-		//////////////////////////////////////////////////////////////////////////////////////
-		template< unsigned int K , typename T , HasSimplexFunctionDifferential< K , T > Field >
-		struct DifferentialField
-		{
-			DifferentialField( const Field & f ) : _f(f){}
-			Differential< K , T > operator()( Position< K > p ) const { return _f.d(p); }
-		protected:
-			Field _f;
-		};
-
-		//////////////////////////////////////////////////////////////////////////////
-		// A wrapper adding functionality to return the differential, as a function //
-		//////////////////////////////////////////////////////////////////////////////
-		template< unsigned int K , typename T , HasSimplexFunctionDifferential< K , T > Field >
-		struct DifferentialFieldWrapper : public Field
-		{
-			// Inherit base constructors
-			using Field::Field;
-
-			// Ensure that evaluation is still supported
-			using Field::d;
-
-			// The differential function type
-			using Differential = DifferentialField< K , T , Field >;
-
-			// Return a function evaluating the differential
-			DifferentialField< K , T , Field > d( void ) const { return Differential( static_cast< const Field & >( *this ) ); }
-		};
-
 		/////////////////////////////////////////////////////////////////////////////////////////////////////
 		// Functionality for validating that analytic derivatives are approximated by discrete derivatives //
 		/////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -81,15 +49,33 @@ namespace MishaK
 			static double SquareError( const Field & field , unsigned int testCount , double delta );
 		};
 
+		//////////////////////////////////////////////////////////////////////////////
+		// A wrapper adding functionality to return the differential, as a function //
+		//////////////////////////////////////////////////////////////////////////////
+		template< unsigned int K , typename T , typename Field >
+		struct DifferentialFieldWrapper
+		{
+			struct Differential
+			{
+				Differential( const Field & f ) requires HasSimplexFunctionDifferential< Field , K , T > : _f(f){}
+				SimplexProcessing::Differential< K , T > operator()( Position< K > p ) const { return _f.d(p); }
+			protected:
+				const Field _f;
+			};
+
+			// Return a function evaluating the differential
+			Differential differential( void ) const { return Differential( static_cast< const Field & >( *this ) ); }
+		};
+
 		////////////////////////////////////////////////////
 		// A structure for extracting the norm of a field //
 		// [NOTE] The field is stored by value            //
 		////////////////////////////////////////////////////
 		template< unsigned int K , HasDotProduct T , HasSimplexFunction< K , T > Field >
-		struct _NormalizationField
+		struct NormalizationField : public DifferentialFieldWrapper< K , T , NormalizationField< K , T , Field > >
 		{
 			// Constructor
-			_NormalizationField( const Field & f ) : _f(f){}
+			NormalizationField( const Field & f ) : _f(f){}
 
 			// Value evaluation
 			T operator()( Position< K > p ) const { T t = _f(p) ; return t / sqrt( DotProduct( t , t ) ); }
@@ -99,9 +85,6 @@ namespace MishaK
 		protected:
 			Field _f;
 		};
-
-		template< unsigned int K , typename T , typename Field >
-		using NormalizationField = DifferentialFieldWrapper< K , T , _NormalizationField< K , T , Field > >;
 
 		// HELPER CLASSES 
 		/////////////////
@@ -113,15 +96,15 @@ namespace MishaK
 		// A structure for evaluating a linear function on a simplex //
 		///////////////////////////////////////////////////////////////
 		template< unsigned int K , typename _T >
-		struct _LinearInterpolant
+		struct LinearInterpolant : public DifferentialFieldWrapper< K , _T , LinearInterpolant< K , _T > >
 		{
 			using T = _T;
 
 			// [Class members]
 
 			// The constructors
-			_LinearInterpolant( void );
-			_LinearInterpolant( const T x[K+1] );
+			LinearInterpolant( void );
+			LinearInterpolant( const T x[K+1] );
 
 			// The evaluation of the linear interpolation at a barycentric coordinate
 			T operator()( Position< K > p ) const { return Value( p , _x ); }
@@ -141,14 +124,11 @@ namespace MishaK
 			T _x[K+1];
 		};
 
-		template< unsigned int K , typename T >
-		using LinearInterpolant = DifferentialFieldWrapper< K , T , _LinearInterpolant< K , T > >;
-
 		////////////////////////////
 		// Rodrigues vector field //
 		////////////////////////////
 		template< unsigned int K , unsigned int N , bool Modulate=true >
-		struct _PhongRodriguesVectorField
+		struct PhongRodriguesVectorField : public DifferentialFieldWrapper< K , Point< double , N > , PhongRodriguesVectorField< K , N , Modulate > >
 		{
 			using T = Point< double , N >;
 
@@ -159,10 +139,10 @@ namespace MishaK
 
 			// [Object members]
 
-			_PhongRodriguesVectorField( void ){}
-			_PhongRodriguesVectorField( const T n[K+1] ){ for( unsigned int k=0 ; k<=K ; k++ ) _n[k] = n[k]; }
-			_PhongRodriguesVectorField( const T n[K+1] , const T x[K+1] ) : _PhongRodriguesVectorField( n ) { for( unsigned int k=0 ; k<=K ; k++ ) _x[k] = x[k]; }
-			_PhongRodriguesVectorField( const Simplex< double , N , K > & n , const T x[K+1] ) : _PhongRodriguesVectorField( &n[0] , x ){}
+			PhongRodriguesVectorField( void ){}
+			PhongRodriguesVectorField( const T n[K+1] ){ for( unsigned int k=0 ; k<=K ; k++ ) _n[k] = n[k]; }
+			PhongRodriguesVectorField( const T n[K+1] , const T x[K+1] ) : PhongRodriguesVectorField( n ) { for( unsigned int k=0 ; k<=K ; k++ ) _x[k] = x[k]; }
+			PhongRodriguesVectorField( const Simplex< double , N , K > & n , const T x[K+1] ) : PhongRodriguesVectorField( &n[0] , x ){}
 
 			T &operator[]( unsigned int k ){ return _x[k]; }
 			const T &operator[]( unsigned int k ) const { return _x[k]; }
@@ -179,9 +159,6 @@ namespace MishaK
 			T _n[K+1] , _x[K+1];
 		};
 
-		template< unsigned int K , unsigned int N , bool Modulate=true >
-		using PhongRodriguesVectorField = DifferentialFieldWrapper< K , typename _PhongRodriguesVectorField< K , N , Modulate >::T , _PhongRodriguesVectorField< K , N , Modulate > >;
-
 		// BASIC FUNCTIONS ON THE MESH
 		//////////////////////////////
 
@@ -192,14 +169,14 @@ namespace MishaK
 		// A field giving the (pseudo) differential of the embedding //
 		///////////////////////////////////////////////////////////////
 		template< unsigned int K >
-		struct _PhongRodriguesIntrinsicToExtrinsicTangentXFormField
+		struct PhongRodriguesIntrinsicToExtrinsicTangentXFormField : public DifferentialFieldWrapper< K , Matrix< double , K , K+1 > , PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K > >
 		{
 			static const unsigned int Dim = K+1;
 			using T = Matrix< double , K , Dim >;
 
-			_PhongRodriguesIntrinsicToExtrinsicTangentXFormField( void ){}
-			_PhongRodriguesIntrinsicToExtrinsicTangentXFormField( const Point< double , Dim > vertices[K+1] , const Point< double , Dim > normals[K+1] );
-			_PhongRodriguesIntrinsicToExtrinsicTangentXFormField( const Simplex< double , Dim , K > & vertices , const Simplex< double , Dim , K > & normals );
+			PhongRodriguesIntrinsicToExtrinsicTangentXFormField( void ){}
+			PhongRodriguesIntrinsicToExtrinsicTangentXFormField( const Point< double , Dim > vertices[K+1] , const Point< double , Dim > normals[K+1] );
+			PhongRodriguesIntrinsicToExtrinsicTangentXFormField( const Simplex< double , Dim , K > & vertices , const Simplex< double , Dim , K > & normals );
 			T operator()( Position< K > p ) const;
 			Differential< K , T > d( Position< K > p ) const;
 		protected:
@@ -207,34 +184,29 @@ namespace MishaK
 			Point< double , Dim > _normal;
 			Matrix< double , K , Dim > _xForm;
 		};
-		template< unsigned int K >
-		using PhongRodriguesIntrinsicToExtrinsicTangentXFormField = DifferentialFieldWrapper< K , typename _PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::T , _PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K > >;
 
 		//////////////////////////////////////////////////////////////////////////////
 		// A field giving the inverse of the (pseudo) differential of the embedding //
 		//////////////////////////////////////////////////////////////////////////////
 		template< unsigned int K >
-		struct _PhongRodriguesExtrinsicToIntrinsicTangentXFormField
+		struct PhongRodriguesExtrinsicToIntrinsicTangentXFormField : public DifferentialFieldWrapper< K , Matrix< double , K+1 , K > , PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K > >
 		{
 			static const unsigned int Dim = K+1;
 			using T = Matrix< double , Dim , K >;
 
-			_PhongRodriguesExtrinsicToIntrinsicTangentXFormField( void ){}
-			_PhongRodriguesExtrinsicToIntrinsicTangentXFormField( const Point< double , Dim > vertices[K+1] , const Point< double , Dim > normals[K+1] );
-			_PhongRodriguesExtrinsicToIntrinsicTangentXFormField( const Simplex< double , Dim , K > & vertices , const Simplex< double , Dim , K > & normals );
+			PhongRodriguesExtrinsicToIntrinsicTangentXFormField( void ){}
+			PhongRodriguesExtrinsicToIntrinsicTangentXFormField( const Point< double , Dim > vertices[K+1] , const Point< double , Dim > normals[K+1] );
+			PhongRodriguesExtrinsicToIntrinsicTangentXFormField( const Simplex< double , Dim , K > & vertices , const Simplex< double , Dim , K > & normals );
 			T operator()( Position< K > p ) const;
 			Differential< K , T > d( Position< K > p ) const;
 		protected:
-			_PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >  _i2e;
+			PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >  _i2e;
 			SquareMatrix< double , K > _gInv;
 		};
-		template< unsigned int K >
-		using PhongRodriguesExtrinsicToIntrinsicTangentXFormField = DifferentialFieldWrapper< K , typename _PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::T , _PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K > >;
 
 		//////////////////////////////////////////////////////////////////////////////////////////////////
 		// A field giving the connection coefficients defined by (pseudo) differential of the embedding //
 		//////////////////////////////////////////////////////////////////////////////////////////////////
-
 		template< unsigned int K >
 		struct ConnectionCoefficientField
 		{
@@ -280,12 +252,12 @@ namespace MishaK
 		// Coefficients of a GENERIC vector-field vector field w.r.t. the coordinate axes //
 		////////////////////////////////////////////////////////////////////////////////////
 		template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
-		struct _IntrinsicVectorField
+		struct IntrinsicVectorField : public DifferentialFieldWrapper< K , Point< double , K > , IntrinsicVectorField< K , N , VectorField > >
 		{
 			using T = Point< double , K >;
 
-			_IntrinsicVectorField( const Point< double , N > vertices[K+1] , const Point< double , N > normals[K+1] , const VectorField & vf ) : _e2i( vertices , normals ) , _vf( vf ) {}
-			_IntrinsicVectorField( const Simplex< double , N , K > & vertices , const Simplex< double , N , K > & normals , const VectorField & vf ) : _IntrinsicVectorField( &vertices[0] , &normals[0] , vf ){}
+			IntrinsicVectorField( const Point< double , N > vertices[K+1] , const Point< double , N > normals[K+1] , const VectorField & vf ) : _e2i( vertices , normals ) , _vf( vf ) {}
+			IntrinsicVectorField( const Simplex< double , N , K > & vertices , const Simplex< double , N , K > & normals , const VectorField & vf ) : IntrinsicVectorField( &vertices[0] , &normals[0] , vf ){}
 
 			// The evaluation of the vector field
 			T operator()( Position< K > p ) const;
@@ -297,9 +269,6 @@ namespace MishaK
 			PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K > _e2i;
 			VectorField _vf;
 		};
-
-		template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
-		using IntrinsicVectorField = DifferentialFieldWrapper< K , typename _IntrinsicVectorField< K , N , VectorField >::T , _IntrinsicVectorField< K , N , VectorField > >;
 
 		////////////////////////////////////////////////////////////////////
 		// The (intrinsic) covariant derivative of a GENERIC vector-field //
@@ -378,9 +347,9 @@ namespace MishaK
 		/////////////////////////////////////////////////////////////////////////////////////
 
 		template< template < unsigned int , unsigned int , typename > typename GenericVectorFieldFunctionality , unsigned int K , unsigned int N , bool Modulate >
-		struct _SinglePhongRodriguesFunctionality : GenericVectorFieldFunctionality< K , N , _PhongRodriguesVectorField< K , N , Modulate > >
+		struct _SinglePhongRodriguesFunctionality : GenericVectorFieldFunctionality< K , N , PhongRodriguesVectorField< K , N , Modulate > >
 		{
-			using VectorField = _PhongRodriguesVectorField< K , N , Modulate >;
+			using VectorField = PhongRodriguesVectorField< K , N , Modulate >;
 
 			_SinglePhongRodriguesFunctionality( const Simplex< double , N , K > & vertices , const Simplex< double , N , K > & normals , const Point< double , N > vf[K+1] )
 				requires std::constructible_from< GenericVectorFieldFunctionality< K , N , VectorField > , const Point< double , N > * , const Point< double , N > * , const VectorField & >
@@ -388,9 +357,9 @@ namespace MishaK
 		};
 
 		template< template < unsigned int , unsigned int , typename , typename > typename GenericVectorFieldFunctionality , unsigned int K , unsigned int N , bool Modulate >
-		struct _DoublePhongRodriguesFunctionality : GenericVectorFieldFunctionality< K , N , _PhongRodriguesVectorField< K , N , Modulate > , _PhongRodriguesVectorField< K , N , Modulate > >
+		struct _DoublePhongRodriguesFunctionality : GenericVectorFieldFunctionality< K , N , PhongRodriguesVectorField< K , N , Modulate > , PhongRodriguesVectorField< K , N , Modulate > >
 		{
-			using VectorField = _PhongRodriguesVectorField< K , N , Modulate >;
+			using VectorField = PhongRodriguesVectorField< K , N , Modulate >;
 
 			_DoublePhongRodriguesFunctionality( const Simplex< double , N , K > & vertices , const Simplex< double , N , K > & normals , const Point< double , N > vf1[K+1] , const Point< double , N > vf2[K+1] )
 				requires std::constructible_from< GenericVectorFieldFunctionality< K , N , VectorField , VectorField > , const Point< double , N > * , const Point< double , N > * , const VectorField & , const VectorField & >

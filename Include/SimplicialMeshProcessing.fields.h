@@ -66,7 +66,7 @@ namespace MishaK
 			struct Differential
 			{
 				Differential( const _MeshField< K , NeedsVertices , NeedsNormals , SimplexField , InTypes ... > & f ) : _f(f){}
-				auto operator[]( size_t sIdx ) const { return _f[sIdx].d(); }
+				auto operator[]( size_t sIdx ) const { return _f[sIdx].differential(); }
 			protected:
 				_MeshField< K , NeedsVertices , NeedsNormals , SimplexField , InTypes ... > _f;
 			};
