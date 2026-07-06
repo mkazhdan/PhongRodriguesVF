@@ -1,0 +1,89 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.37216.2
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Include", "Include", "{C2875DD8-A0FA-46D1-AD52-4453B64A6CFD}"
+	ProjectSection(SolutionItems) = preProject
+		Include\NormalFitter.h = Include\NormalFitter.h
+		Include\NormalFitter.inl = Include\NormalFitter.inl
+		Include\PlyIO.h = Include\PlyIO.h
+		Include\PlyIO.inl = Include\PlyIO.inl
+		Include\PreProcessing.h = Include\PreProcessing.h
+		Include\Subdivide.h = Include\Subdivide.h
+		Include\Subdivide.inl = Include\Subdivide.inl
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Bracket", "Bracket\Bracket.vcxproj", "{B13605F0-2C74-4F7B-9B96-CDB2E952C113}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SimplexProcessing", "SimplexProcessing", "{F456E943-B09C-416A-A05D-C38E5A073474}"
+	ProjectSection(SolutionItems) = preProject
+		Include\SimplexProcessing.concepts.h = Include\SimplexProcessing.concepts.h
+		Include\SimplexProcessing.elements.h = Include\SimplexProcessing.elements.h
+		Include\SimplexProcessing.elements.inl = Include\SimplexProcessing.elements.inl
+		Include\SimplexProcessing.fields.h = Include\SimplexProcessing.fields.h
+		Include\SimplexProcessing.fields.inl = Include\SimplexProcessing.fields.inl
+		Include\SimplexProcessing.functions.h = Include\SimplexProcessing.functions.h
+		Include\SimplexProcessing.functions.inl = Include\SimplexProcessing.functions.inl
+		Include\SimplexProcessing.h = Include\SimplexProcessing.h
+		Include\SimplexProcessing.integration.h = Include\SimplexProcessing.integration.h
+		Include\SimplexProcessing.integration.inl = Include\SimplexProcessing.integration.inl
+		Include\SimplexProcessing.types.h = Include\SimplexProcessing.types.h
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SimplicialMeshProcessing", "SimplicialMeshProcessing", "{2AFC91C1-A396-4FFA-948A-C3E486D6364E}"
+	ProjectSection(SolutionItems) = preProject
+		Include\SimplicialMeshProcessing.concepts.h = Include\SimplicialMeshProcessing.concepts.h
+		Include\SimplicialMeshProcessing.embedded.h = Include\SimplicialMeshProcessing.embedded.h
+		Include\SimplicialMeshProcessing.embedded.inl = Include\SimplicialMeshProcessing.embedded.inl
+		Include\SimplicialMeshProcessing.fields.h = Include\SimplicialMeshProcessing.fields.h
+		Include\SimplicialMeshProcessing.fields.inl = Include\SimplicialMeshProcessing.fields.inl
+		Include\SimplicialMeshProcessing.h = Include\SimplicialMeshProcessing.h
+		Include\SimplicialMeshProcessing.integration.h = Include\SimplicialMeshProcessing.integration.h
+		Include\SimplicialMeshProcessing.integration.inl = Include\SimplicialMeshProcessing.integration.inl
+		Include\SimplicialMeshProcessing.normalizer.h = Include\SimplicialMeshProcessing.normalizer.h
+		Include\SimplicialMeshProcessing.normalizer.inl = Include\SimplicialMeshProcessing.normalizer.inl
+		Include\SimplicialMeshProcessing.phong.h = Include\SimplicialMeshProcessing.phong.h
+		Include\SimplicialMeshProcessing.phong.inl = Include\SimplicialMeshProcessing.phong.inl
+		Include\SimplicialMeshProcessing.riemannian.h = Include\SimplicialMeshProcessing.riemannian.h
+		Include\SimplicialMeshProcessing.riemannian.inl = Include\SimplicialMeshProcessing.riemannian.inl
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SparseInterpolation", "SparseInterpolation\SparseInterpolation.vcxproj", "{159A8C83-E7F6-4C37-9236-3B6DEE1698C9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B13605F0-2C74-4F7B-9B96-CDB2E952C113}.Debug|x64.ActiveCfg = Debug|x64
+		{B13605F0-2C74-4F7B-9B96-CDB2E952C113}.Debug|x64.Build.0 = Debug|x64
+		{B13605F0-2C74-4F7B-9B96-CDB2E952C113}.Debug|x86.ActiveCfg = Debug|Win32
+		{B13605F0-2C74-4F7B-9B96-CDB2E952C113}.Debug|x86.Build.0 = Debug|Win32
+		{B13605F0-2C74-4F7B-9B96-CDB2E952C113}.Release|x64.ActiveCfg = Release|x64
+		{B13605F0-2C74-4F7B-9B96-CDB2E952C113}.Release|x64.Build.0 = Release|x64
+		{B13605F0-2C74-4F7B-9B96-CDB2E952C113}.Release|x86.ActiveCfg = Release|Win32
+		{B13605F0-2C74-4F7B-9B96-CDB2E952C113}.Release|x86.Build.0 = Release|Win32
+		{159A8C83-E7F6-4C37-9236-3B6DEE1698C9}.Debug|x64.ActiveCfg = Debug|x64
+		{159A8C83-E7F6-4C37-9236-3B6DEE1698C9}.Debug|x64.Build.0 = Debug|x64
+		{159A8C83-E7F6-4C37-9236-3B6DEE1698C9}.Debug|x86.ActiveCfg = Debug|Win32
+		{159A8C83-E7F6-4C37-9236-3B6DEE1698C9}.Debug|x86.Build.0 = Debug|Win32
+		{159A8C83-E7F6-4C37-9236-3B6DEE1698C9}.Release|x64.ActiveCfg = Release|x64
+		{159A8C83-E7F6-4C37-9236-3B6DEE1698C9}.Release|x64.Build.0 = Release|x64
+		{159A8C83-E7F6-4C37-9236-3B6DEE1698C9}.Release|x86.ActiveCfg = Release|Win32
+		{159A8C83-E7F6-4C37-9236-3B6DEE1698C9}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F456E943-B09C-416A-A05D-C38E5A073474} = {C2875DD8-A0FA-46D1-AD52-4453B64A6CFD}
+		{2AFC91C1-A396-4FFA-948A-C3E486D6364E} = {C2875DD8-A0FA-46D1-AD52-4453B64A6CFD}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AD03CA58-7EAD-4CB8-B377-0400B4386E63}
+	EndGlobalSection
+EndGlobal

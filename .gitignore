@@ -1,0 +1,10 @@
+.vs/
+Bin/
+Data/
+*.filters
+*.user
+*.o
+*.tmp
+*.log
+*.pdb
+*.zip

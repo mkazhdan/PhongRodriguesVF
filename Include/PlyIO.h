@@ -1,0 +1,159 @@
+/*
+Copyright (c) 2026, Michael Kazhdan and Hongyi Liu
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+Redistributions of source code must retain the above copyright notice, this list of
+conditions and the following disclaimer. Redistributions in binary form must reproduce
+the above copyright notice, this list of conditions and the following disclaimer
+in the documentation and/or other materials provided with the distribution. 
+
+Neither the name of the Johns Hopkins University nor the names of its contributors
+may be used to endorse or promote products derived from this software without specific
+prior written permission. 
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO THE IMPLIED WARRANTIES 
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT
+SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE  GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.
+*/
+
+#ifndef PLY_IO_INCLUDED
+#define PLY_IO_INCLUDED
+
+#include <string>
+#include <map>
+#include "Misha/PlyData.h"
+#include "Misha/Geometry.h"
+#include "Misha/Exceptions.h"
+
+namespace MishaK
+{
+	namespace PlyIO
+	{
+		template< typename Index , typename Real , unsigned int K , unsigned int Dim >
+		int ReadMesh( std::string fileName , std::vector< Point< Real , Dim > > &vertices ,                                               std::vector< SimplexIndex< K , Index > > &simplices );
+
+		template< typename Index , typename Real , unsigned int K , unsigned int Dim >
+		int ReadMesh( std::string fileName , std::vector< Point< Real , Dim > > &vertices , std::vector< Point< Real , Dim > > &normals , std::vector< SimplexIndex< K , Index > > &simplices );
+
+		template< typename Index , typename Real , unsigned int K , unsigned int Dim >
+		int ReadColorMesh( std::string fileName , std::vector< Point< Real , Dim > > &vertices ,                                               std::vector< Point< Real , 3 > > &colors , std::vector< SimplexIndex< K , Index > > &simplices );
+
+		template< typename Index , typename Real , unsigned int K , unsigned int Dim >
+		int ReadColorMesh( std::string fileName , std::vector< Point< Real , Dim > > &vertices , std::vector< Point< Real , Dim > > &normals , std::vector< Point< Real , 3 > > &colors , std::vector< SimplexIndex< K , Index > > &simplices );
+
+		template< typename Index , typename Real , unsigned int Dim , unsigned int TDim >
+		int ReadTexturedMesh( std::string fileName , std::vector< Point< Real , Dim > > &vertices ,                                               std::vector< Point< Real , TDim > > &textureCoordinates , std::vector< SimplexIndex< 2 , Index > > &simplices );
+
+		template< typename Index , typename Real , unsigned int Dim , unsigned int TDim >
+		int ReadTexturedMesh( std::string fileName , std::vector< Point< Real , Dim > > &vertices , std::vector< Point< Real , Dim > > &normals , std::vector< Point< Real , TDim > > &textureCoordinates , std::vector< SimplexIndex< 2 , Index > > &simplices );
+
+		template< typename Index , typename Real , unsigned int K , unsigned int Dim >
+		int ReadVectorFieldMesh( std::string fileName , std::vector< Point< Real , Dim > > &vertices ,                                               std::vector< Point< Real , Dim > > &vectorField , std::vector< SimplexIndex< K , Index > > &simplices );
+
+		template< typename Index , typename Real , unsigned int K , unsigned int Dim >
+		int ReadVectorFieldMesh( std::string fileName , std::vector< Point< Real , Dim > > &vertices , std::vector< Point< Real , Dim > > &normals , std::vector< Point< Real , Dim > > &vectorField , std::vector< SimplexIndex< K , Index > > &simplices );
+
+		template< typename Index , typename Real , unsigned int K , unsigned int Dim >
+		int ReadVectorFieldMesh( std::string fileName , std::vector< Point< Real , Dim > > &vertices ,                                               std::vector< SimplexIndex< K , Index > > &simplices , std::vector< Point< Real , Dim > > &vectorField );
+
+		template< typename Index , typename Real , unsigned int K , unsigned int Dim >
+		int ReadVectorFieldMesh( std::string fileName , std::vector< Point< Real , Dim > > &vertices , std::vector< Point< Real , Dim > > &normals , std::vector< SimplexIndex< K , Index > > &simplices , std::vector< Point< Real , Dim > > &vectorField );
+
+		template< typename Index , typename Real , unsigned int K , unsigned int Dim >
+		void WriteMesh( std::string fileName , const std::vector< Point< Real , Dim > > &vertices ,                                                     const std::vector< SimplexIndex< K , Index > > &simplices , int file_type=PLY_BINARY_NATIVE );
+
+		template< typename Index , typename Real , unsigned int K , unsigned int Dim >
+		void WriteMesh( std::string fileName , const std::vector< Point< Real , Dim > > &vertices , const std::vector< Point< Real , Dim > > &normals , const std::vector< SimplexIndex< K , Index > > &simplices , int file_type=PLY_BINARY_NATIVE );
+
+		template< typename Index , typename Real , unsigned int K , unsigned int Dim >
+		void WriteColorMesh( std::string fileName , const std::vector< Point< Real , Dim > > &vertices ,                                                     const std::vector< Point< Real , 3 > > &colors , const std::vector< SimplexIndex< K , Index > > &simplices , int file_type=PLY_BINARY_NATIVE );
+
+		template< typename Index , typename Real , unsigned int K , unsigned int Dim >
+		void WriteColorMesh( std::string fileName , const std::vector< Point< Real , Dim > > &vertices , const std::vector< Point< Real , Dim > > &normals , const std::vector< Point< Real , 3 > > &colors , const std::vector< SimplexIndex< K , Index > > &simplices , int file_type=PLY_BINARY_NATIVE );
+
+
+		template< typename Index , typename Real , unsigned int K , unsigned int Dim  >
+		void WriteVectorFieldMesh( std::string fileName , const std::vector< Point< Real , Dim > > &vertices , const std::vector< Point< Real , Dim > >  & vf ,                                                     const std::vector< SimplexIndex< K , Index > > &simplices , int file_type=PLY_BINARY_NATIVE );
+
+		template< typename Index , typename Real , unsigned int K , unsigned int Dim  >
+		void WriteVectorFieldMesh( std::string fileName , const std::vector< Point< Real , Dim > > &vertices , const std::vector< Point< Real , Dim > >  & vf , const std::vector< Point< Real , Dim > > &normals , const std::vector< SimplexIndex< K , Index > > &simplices , int file_type=PLY_BINARY_NATIVE );
+
+		template< typename Index , typename Real , unsigned int K , unsigned int Dim >
+		void WriteColorVectorFieldMesh( std::string fileName , const std::vector< Point< Real , Dim > > &vertices , const std::vector< Point< Real , 3 > > &colors , const std::vector< Point< Real , Dim > > & vf ,                                                     const std::vector< SimplexIndex< K , Index > > &simplices , int file_type=PLY_BINARY_NATIVE );
+
+		template< typename Index , typename Real , unsigned int K , unsigned int Dim >
+		void WriteColorVectorFieldMesh( std::string fileName , const std::vector< Point< Real , Dim > > &vertices , const std::vector< Point< Real , 3 > > &colors , const std::vector< Point< Real , Dim > > & vf , const std::vector< Point< Real , Dim > > &normals , const std::vector< SimplexIndex< K , Index > > &simplices , int file_type=PLY_BINARY_NATIVE );
+
+
+		template< typename Index , typename Real , unsigned int K , unsigned int Dim  >
+		void WriteVectorFieldMesh( std::string fileName , const std::vector< Point< Real , Dim > > &vertices ,                                                     const std::vector< SimplexIndex< K , Index > > &simplices , const std::vector< Point< Real , Dim > >  & vf , int file_type=PLY_BINARY_NATIVE );
+
+		template< typename Index , typename Real , unsigned int K , unsigned int Dim  >
+		void WriteVectorFieldMesh( std::string fileName , const std::vector< Point< Real , Dim > > &vertices , const std::vector< Point< Real , Dim > > &normals , const std::vector< SimplexIndex< K , Index > > &simplices , const std::vector< Point< Real , Dim > >  & vf , int file_type=PLY_BINARY_NATIVE );
+
+		template< typename Index , typename Real , unsigned int K , unsigned int Dim >
+		void WriteColorVectorFieldMesh( std::string fileName , const std::vector< Point< Real , Dim > > &vertices , const std::vector< Point< Real , 3 > > &colors ,                                                     const std::vector< SimplexIndex< K , Index > > &simplices , const std::vector< Point< Real , Dim > > & vf , int file_type=PLY_BINARY_NATIVE );
+
+		template< typename Index , typename Real , unsigned int K , unsigned int Dim >
+		void WriteColorVectorFieldMesh( std::string fileName , const std::vector< Point< Real , Dim > > &vertices , const std::vector< Point< Real , 3 > > &colors , const std::vector< Point< Real , Dim > > &normals , const std::vector< SimplexIndex< K , Index > > &simplices , const std::vector< Point< Real , Dim > > & vf , int file_type=PLY_BINARY_NATIVE );
+
+		template< typename Index , typename Real , unsigned int K >
+		std::vector< Point< Real , K+1 > > SimplexToVertexNormals( const std::vector< Point< Real , K+1 > > &vertices , const std::vector< SimplexIndex< K , Index > > &simplices );
+
+
+		template< typename Index , typename Real , unsigned int Dim >
+		struct PlyVFFace
+		{
+			unsigned int nr_vertices;
+			Index * vertices;
+			Point< Real , Dim > v;
+
+			PlyVFFace( void );
+			~PlyVFFace( void );
+			PlyVFFace( const PlyVFFace & face );
+			PlyVFFace & operator = ( const PlyVFFace & face );
+			void resize( unsigned int count );
+			unsigned int size( void ) const;
+			Index& operator[] ( unsigned int idx );
+			const Index & operator[] ( unsigned int idx ) const;
+			static std::vector< GregTurk::PlyProperty > Properties( void );
+			static std::vector< GregTurk::PlyProperty > ReadProperties( void );
+		};
+
+		template< typename Index , typename Real >
+		struct PlyTexturedFace
+		{
+			unsigned int nr_vertices , nr_uv_coordinates;
+			Index * vertices;
+			Real *uv_coordinates;
+			PlyTexturedFace( void );
+			~PlyTexturedFace( void );
+			PlyTexturedFace( const PlyTexturedFace& face );
+			PlyTexturedFace& operator = ( const PlyTexturedFace& face );
+
+			void resize( unsigned int count );
+			Index& operator[] ( unsigned int idx );
+			const Index & operator[] ( unsigned int idx ) const;
+			Point2D< Real >& texture( unsigned int idx );
+			const Point2D< Real > & texture( unsigned int idx ) const;
+			int size( void ) const;
+
+			const static int ReadComponents = 2;
+			const static int WriteComponents = 2;
+			static GregTurk::PlyProperty ReadProperties[];
+			static GregTurk::PlyProperty WriteProperties[];
+		};
+#include "PlyIO.inl"
+	}
+}
+#endif // TEXTURE_INCLUDED
