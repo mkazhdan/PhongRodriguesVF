@@ -126,27 +126,6 @@ namespace MishaK
 			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , typename ElementIndex , HasMeshSystemAndDSystemFunction< K , NumElementsPerSimplex , T > SystemField >
 			Eigen::SparseMatrix< double > _system( size_t fNum , Elements && E , ElementIndex && Idx , SystemField && Sys , bool needsScaling ) const;
 
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements >
-			SquareMatrix< double , NumElementsPerSimplex > _simplexMass( size_t sIdx , Elements && E ) const;
-
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			SquareMatrix< double , NumElementsPerSimplex > _simplexMass( size_t sIdx , Elements && E , ScaleFactorField && S ) const;
-
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements >
-			SquareMatrix< double , NumElementsPerSimplex > _simplexStiffness( size_t sIdx , Elements && E ) const;
-
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			SquareMatrix< double , NumElementsPerSimplex > _simplexStiffness( size_t sIdx , Elements && E , ScaleFactorField && S ) const;
-
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , HasMeshSystemLinearMapOrBilinearFormFunction< K , NumElementsPerSimplex , T > SystemField >
-			SquareMatrix< double , NumElementsPerSimplex > _simplexSystem( size_t sIdx , Elements && E , SystemField && Sys ) const;
-
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , HasMeshDSystemFunction< K , NumElementsPerSimplex , T > SystemField >
-			SquareMatrix< double , NumElementsPerSimplex > _simplexSystem( size_t sIdx , Elements && E , SystemField && Sys ) const;
-
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , HasMeshSystemAndDSystemFunction< K , NumElementsPerSimplex , T > SystemField >
-			SquareMatrix< double , NumElementsPerSimplex > _simplexSystem( size_t sIdx , Elements && E , SystemField && Sys ) const;
-
 			template< unsigned int NumElementsPerSimplex , typename ElementIndex >
 			SystemIntegration::EigenMatrixEntries< NumElementsPerSimplex > _eigenMatrixEntries( size_t fNum , ElementIndex && Idx ) const;
 

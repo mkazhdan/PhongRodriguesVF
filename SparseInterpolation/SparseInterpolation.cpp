@@ -131,9 +131,9 @@ std::vector< Point< double , Dim > > FitVF
 	Eigen::SparseMatrix< double > S;
 	switch( Energy.value )
 	{
-	case EnergyType::Connection: S = mesh.template vectorCovariantStiffness< Quadrature >                                () ; break;
-	case EnergyType::Hodge:      S = mesh.template vectorCovariantStiffness< Quadrature , CovariantComponent::Hodge >    () ; break;
-	case EnergyType::Killing:    S = mesh.template vectorCovariantStiffness< Quadrature , CovariantComponent::Symmetric >() ; break;
+	case EnergyType::Connection: S = mesh.template stiffness< Quadrature >                                () ; break;
+	case EnergyType::Hodge:      S = mesh.template stiffness< Quadrature , CovariantComponent::Hodge >    () ; break;
+	case EnergyType::Killing:    S = mesh.template stiffness< Quadrature , CovariantComponent::Symmetric >() ; break;
 	default: MK_ERROR_OUT( "Unrecognized energy type: " , Energy.value );
 	}
 

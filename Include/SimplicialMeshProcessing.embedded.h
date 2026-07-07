@@ -70,61 +70,42 @@ namespace MishaK
 			auto        measureScaleField( size_t sIdx ) const;
 			auto inverseMetricTensorField( size_t sIdx ) const;
 
-			auto scalarElementIndex( void ) const;
-
-			auto scalarElements( void ) const;
+			auto elementIndex( void ) const;
+			auto elements( void ) const;
 
 			template< SimplexProcessing::HasFunction< std::pair< size_t , Point< double , Dim > > , size_t > SampleFunctor >
 			Eigen::SparseMatrix< double > evaluation( size_t sampleNum , SampleFunctor && sampleFunctor ) const;
 
 			template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::VectorXd scalarDual( ScalarOrDifferentialField && F , ScaleFactorField && S ) const;
+			Eigen::VectorXd dual( ScalarOrDifferentialField && F , ScaleFactorField && S ) const;
 
 			template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField >
-			Eigen::VectorXd scalarDual( ScalarOrDifferentialField && F ) const
+			Eigen::VectorXd dual( ScalarOrDifferentialField && F ) const
 				requires SimplexProcessing::HasArrayOfSimplexFunctions< ScalarOrDifferentialField , K , Scalar > || SimplexProcessing::HasArrayOfSimplexFunctions< ScalarOrDifferentialField , K , SimplexProcessing::Differential< K , Scalar > >;
 
 			template< unsigned int QuadratureSamples >
-			Eigen::SparseMatrix< double > scalarMass( void ) const;
+			Eigen::SparseMatrix< double > mass( void ) const;
 
 			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::SparseMatrix< double > scalarMass( ScaleFactorField && S ) const;
+			Eigen::SparseMatrix< double > mass( ScaleFactorField && S ) const;
 
 			template< unsigned int QuadratureSamples >
-			Eigen::SparseMatrix< double > scalarStiffness( void ) const;
+			Eigen::SparseMatrix< double > stiffness( void ) const;
 
 			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::SparseMatrix< double > scalarStiffness( ScaleFactorField && S ) const;
+			Eigen::SparseMatrix< double > stiffness( ScaleFactorField && S ) const;
 
 			template< unsigned int QuadratureSamples , HasMeshTangentVectorFunction< K > TangentVectorField >
-			Eigen::SparseMatrix< double > scalarDerivationSystem( TangentVectorField && VF ) const;
+			Eigen::SparseMatrix< double > derivationSystem( TangentVectorField && VF ) const;
 
 			template< unsigned int QuadratureSamples , typename SystemField >
-			Eigen::SparseMatrix< double > scalarSystem( SystemField && Sys , bool needsScaling=true ) const;
+			Eigen::SparseMatrix< double > system( SystemField && Sys , bool needsScaling=true ) const;
 
-			template< unsigned int QuadratureSamples >
-			SquareMatrix< double , K+1 > simplexScalarMass( size_t sIdx ) const;
 
-			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			SquareMatrix< double , K+1 > simplexScalarMass( size_t sIdx , ScaleFactorField && S ) const;
-
-			template< unsigned int QuadratureSamples >
-			SquareMatrix< double , K+1 > simplexScalarStiffness( size_t sIdx ) const;
-
-			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			SquareMatrix< double , K+1 > simplexScalarStiffness( size_t sIdx , ScaleFactorField && S ) const;
-
-			template< unsigned int QuadratureSamples , HasMeshTangentVectorFunction< K > TangentVectorField >
-			SquareMatrix< double , K+1 > simplexScalarDerivationSystem( size_t sIdx , TangentVectorField && VF ) const;
+			EigenMatrixEntries eigenMatrixEntries( void ) const { return this->template _eigenMatrixEntries< K+1 >( _vertices.size() , elementIndex() ); }
 
 			template< unsigned int QuadratureSamples , typename SystemField >
-			SquareMatrix< double , K+1 > simplexScalarSystem( size_t sIdx , SystemField && Sys ) const;
-
-
-			EigenMatrixEntries scalarEigenMatrixEntries( void ) const { return this->template _eigenMatrixEntries< K+1 >( _vertices.size() , scalarElementIndex() ); }
-
-			template< unsigned int QuadratureSamples , typename SystemField >
-			void setScalarSystemEntries( EigenMatrixEntries &eme , SystemField && Sys ) const;
+			void setSystemEntries( EigenMatrixEntries & eme , SystemField && Sys ) const;
 
 		protected:
 			std::vector< Point< double , Dim > > &_vertices;

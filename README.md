@@ -180,13 +180,13 @@ This evaluates the bracket and computes its best-fit representation in terms of 
 <DD> After being initialized with the vertices, normals, and triangles of a mesh, different system matrices can be computed.
 <UL>
 <LI> The method<BR>
-<CENTER><CODE>Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::vectorMass&lt;QuadratureSamples&gt;(void)</CODE></CENTER><BR>
+<CENTER><CODE>Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::mass&lt;QuadratureSamples&gt;(void)</CODE></CENTER><BR>
 return the symmetric <code>3&middot;|V|&times;3&middot;|V|</code> mass matrix, with <CODE>QuadratureSamples</CODE> the numer of quadrature points per triangle.
 <LI> The method:
-<CENTER><CODE>Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::vectorCovariantStiffness&lt;QuadratureSamples&gt;(void)</CODE></CENTER><BR>
+<CENTER><CODE>Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::stiffness&lt;QuadratureSamples&gt;(void)</CODE></CENTER><BR>
 return the symmetric <code>3&middot;|V|&times;3&middot;|V|</code> stiffness matrix defined by the connection Laplacian.
 <LI> Symmetric <code>3&middot;|V|&times;3&middot;|V|</code> matrices defining the stiffness with respect to individual components of the covariant matrix can be obtained invoking the method:<BR>
-<CENTER><CODE>Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::vectorCovariantStiffness&lt;QuadratureSamples,CovComponent&gt;(void)</CODE></CENTER><BR>
+<CENTER><CODE>Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::stiffness&lt;QuadratureSamples,CovComponent&gt;(void)</CODE></CENTER><BR>
 with <CODE>CovComponent</CODE> an <CODE>enum</CODE> of type <CODE>CovariantComponent</CODE> describing the component of the covariant derivative used to define the stiffness.
 <LI> The method:
 <CENTER><CODE>Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::tangentProlongation(void)</CODE></CENTER><BR>
@@ -209,7 +209,7 @@ Extrinsic vector fields are represented by <CODE>Eigen::VectorXd</CODE>s of size
 returning the value of the vector-field within the triangle.
 </UL>
 One can obtain <CODE>Eigen::VectorXd</CODE> of size <code>3&middot;|V|</CODE> giving the integral of the inner-product of the vector-field with each of the Phong-Rodrigues basis vector-fields by invoking the method:<BR>
-<CENTER><CODE>Eigen::VectorXd EmbeddedPhongMesh<2>::vectorDual&lt;QuadratureSamples&gt;(MeshField &amp;&amp;) const</CODE></CENTER>
+<CENTER><CODE>Eigen::VectorXd EmbeddedPhongMesh<2>::dual&lt;QuadratureSamples&gt;(MeshField &amp;&amp;) const</CODE></CENTER>
 
 </DL>
 </OL>
@@ -228,3 +228,6 @@ One can obtain <CODE>Eigen::VectorXd</CODE> of size <code>3&middot;|V|</CODE> gi
 
 </details>
 
+
+<hr>
+<a href="https://www.cs.jhu.edu/~misha">HOME</a>

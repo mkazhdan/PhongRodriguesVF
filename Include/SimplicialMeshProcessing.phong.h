@@ -90,134 +90,56 @@ namespace MishaK
 			auto inverseMetricTensorField( size_t sIdx ) const;
 			auto              normalField( size_t sIdx ) const;
 
-			auto scalarElementIndex( void ) const;
-			auto vectorElementIndex( void ) const;
-
-			auto scalarElements( void ) const;
-			auto vectorElements( void ) const;
+			auto elementIndex( void ) const;
+			auto elements( void ) const;
 
 			template< SimplexProcessing::HasFunction< std::pair< size_t , Point< double , K > > , size_t > SampleFunctor >
-			Eigen::SparseMatrix< double > scalarEvaluation( size_t sampleNum , SampleFunctor && sampleFunctor ) const;
-
-			template< SimplexProcessing::HasFunction< std::pair< size_t , Point< double , K > > , size_t > SampleFunctor >
-			Eigen::SparseMatrix< double > vectorEvaluation( size_t sampleNum , SampleFunctor && sampleFunctor ) const;
+			Eigen::SparseMatrix< double > evaluation( size_t sampleNum , SampleFunctor && sampleFunctor ) const;
 
 
 			template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::VectorXd scalarDual( ScalarOrDifferentialField && F , ScaleFactorField && S ) const;
+			Eigen::VectorXd dual( ScalarOrDifferentialField && F , ScaleFactorField && S ) const;
 
 			template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField >
-			Eigen::VectorXd scalarDual( ScalarOrDifferentialField && F ) const;
-
-			template< unsigned int QuadratureSamples >
-			Eigen::SparseMatrix< double > scalarMass( void ) const;
+			Eigen::VectorXd dual( ScalarOrDifferentialField && F ) const;
 
 			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::SparseMatrix< double > scalarMass( ScaleFactorField && S ) const;
+			Eigen::SparseMatrix< double > mass( ScaleFactorField && S ) const;
 
 			template< unsigned int QuadratureSamples >
-			Eigen::SparseMatrix< double > scalarStiffness( void ) const;
-
-			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::SparseMatrix< double > scalarStiffness( ScaleFactorField && S ) const;
+			Eigen::SparseMatrix< double > mass( void ) const;
 
 			template< unsigned int QuadratureSamples , typename SystemField >
-			Eigen::SparseMatrix< double > scalarSystem( SystemField && Sys ) const;
+			Eigen::SparseMatrix< double > system( SystemField && Sys , bool needsScaling=true ) const;
 
 			template< unsigned int QuadratureSamples >
-			SquareMatrix< double , K+1 > simplexScalarMass( size_t sIdx ) const;
+			Eigen::SparseMatrix< double > stiffness( void ) const;
 
 			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			SquareMatrix< double , K+1 > simplexScalarMass( size_t sIdx , ScaleFactorField && S ) const;
-
-			template< unsigned int QuadratureSamples >
-			SquareMatrix< double , K+1 > simplexScalarStiffness( size_t sIdx ) const;
-
-			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			SquareMatrix< double , K+1 > simplexScalarStiffness( size_t sIdx , ScaleFactorField && S ) const;
-
-			template< unsigned int QuadratureSamples , typename SystemField >
-			SquareMatrix< double , K+1 > simplexScalarSystem( size_t sIdx , SystemField && Sys ) const;
-
-
-			EigenMatrixEntries scalarEigenMatrixEntries( void ) const { return EigenMatrixEntries( _vertices.size() , _simplices.size() , scalarElementIndex() ); }
-
-			template< unsigned int QuadratureSamples , typename SystemField >
-			void setScalarSystemEntries( EigenMatrixEntries &eme , SystemField && Sys ) const;
-
-			template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::VectorXd vectorDual( ScalarOrDifferentialField && F , ScaleFactorField && S ) const;
-
-			template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField >
-			Eigen::VectorXd vectorDual( ScalarOrDifferentialField && F ) const;
-
-			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::SparseMatrix< double > vectorMass( ScaleFactorField && S ) const;
-
-			template< unsigned int QuadratureSamples >
-			Eigen::SparseMatrix< double > vectorMass( void ) const;
-
-			template< unsigned int QuadratureSamples , typename SystemField >
-			Eigen::SparseMatrix< double > vectorSystem( SystemField && Sys , bool needsScaling=true ) const;
-
-			template< unsigned int QuadratureSamples >
-			Eigen::SparseMatrix< double > vectorCovariantStiffness( void ) const;
-
-			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::SparseMatrix< double > vectorCovariantStiffness( ScaleFactorField && SF ) const;
+			Eigen::SparseMatrix< double > stiffness( ScaleFactorField && SF ) const;
 
 			template< unsigned int QuadratureSamples , CovariantComponent CComponent >
-			Eigen::SparseMatrix< double > vectorCovariantStiffness( void ) const;
+			Eigen::SparseMatrix< double > stiffness( void ) const;
 
 			template< unsigned int QuadratureSamples , CovariantComponent CComponent , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::SparseMatrix< double > vectorCovariantStiffness( ScaleFactorField && SF ) const;
+			Eigen::SparseMatrix< double > stiffness( ScaleFactorField && SF ) const;
 
 			// Gives the squared-norm of the bracket with v
 			template< unsigned int QuadratureSamples , typename TangentVectorField >
-			Eigen::SparseMatrix< double > vectorBracketEnergy( TangentVectorField && V ) const;
+			Eigen::SparseMatrix< double > bracketEnergy( TangentVectorField && V ) const;
 
 			// Gives the squared-norm of the dot-product with v
 			template< unsigned int QuadratureSamples , typename TangentVectorField >
-			Eigen::SparseMatrix< double > vectorDotProductEnergy( TangentVectorField && V ) const;
+			Eigen::SparseMatrix< double > dotProductEnergy( TangentVectorField && V ) const;
 
-			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			SquareMatrix< double , (K+1)*(K+1) > simplexVectorMass( size_t sIdx , ScaleFactorField && S ) const;
-
-			template< unsigned int QuadratureSamples >
-			SquareMatrix< double , (K+1)*(K+1) > simplexVectorMass( size_t sIdx ) const;
+			EigenMatrixEntries eigenMatrixEntries( void ) const { return this->template _eigenMatrixEntries< (K+1)*Dim >( _vertices.size()*Dim , elementIndex() ); }
 
 			template< unsigned int QuadratureSamples , typename SystemField >
-			SquareMatrix< double , (K+1)*(K+1) > simplexVectorSystem( size_t sIdx , SystemField && Sys ) const;
+			void setSystemEntries( EigenMatrixEntries & eme , SystemField && Sys ) const;
 
-			template< unsigned int QuadratureSamples >
-			SquareMatrix< double , (K+1)*(K+1) > simplexVectorCovariantStiffness( size_t sIdx ) const;
+			Eigen::SparseMatrix< double > J( void ) const requires( K==2 );
 
-			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			SquareMatrix< double , (K+1)*(K+1) > simplexVectorCovariantStiffness( size_t sIdx , ScaleFactorField && SF ) const;
-
-			template< unsigned int QuadratureSamples , CovariantComponent CComponent >
-			SquareMatrix< double , (K+1)*(K+1) > simplexVectorCovariantStiffness( size_t sIdx ) const;
-
-			template< unsigned int QuadratureSamples , CovariantComponent CComponent , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			SquareMatrix< double , (K+1)*(K+1) > simplexVectorCovariantStiffness( size_t sIdx , ScaleFactorField && SF ) const;
-
-			// Gives the squared-norm of the bracket with v
-			template< unsigned int QuadratureSamples , typename TangentVectorField >
-			SquareMatrix< double , (K+1)*(K+1) > simplexVectorBracketEnergy( size_t sIdx , TangentVectorField && V ) const;
-
-			// Gives the squared-norm of the dot-product with v
-			template< unsigned int QuadratureSamples , typename TangentVectorField >
-			SquareMatrix< double , (K+1)*(K+1) > simplexVectorDotProductEnergy( size_t sIdx , TangentVectorField && V ) const;
-
-
-			EigenMatrixEntries vectorEigenMatrixEntries( void ) const { return this->template _eigenMatrixEntries< (K+1)*Dim >( _vertices.size()*Dim , vectorElementIndex() ); }
-
-			template< unsigned int QuadratureSamples , typename SystemField >
-			void setVectorSystemEntries( EigenMatrixEntries & eme , SystemField && Sys ) const;
-
-			Eigen::SparseMatrix< double > vectorJ( void ) const;
-
-			Eigen::SparseMatrix< double > vectorRotate( double radians ) const;
+			Eigen::SparseMatrix< double > rotation( double radians ) const requires( K==2 );
 
 			Eigen::SparseMatrix< double > tangentProlongation( void ) const;
 

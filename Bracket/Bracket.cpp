@@ -90,14 +90,14 @@ std::vector< Point< double , Dim > > GetBracket( const EmbeddedPhongMesh< K > &m
 	Eigen::SparseMatrix< double > P = mesh.tangentProlongation();
 	Eigen::SparseMatrix< double > Pt = P.transpose();
 
-	Eigen::SparseMatrix< double > M = Pt * mesh.template vectorMass< Quadrature >() * P;
+	Eigen::SparseMatrix< double > M = Pt * mesh.template mass< Quadrature >() * P;
 	if( Verbose.set ) std::cout << "Got system matrices: " << timer() << std::endl;
 
 	LLtSolver solver( M );
 	if( Verbose.set ) std::cout << "Factorized system matrices: " << timer() << std::endl;
 
 	// Compute the bracket of the two vector fields and integrate against the Phong-Rodrigues vector-field basis
-	Eigen::VectorXd _Z = mesh.template vectorDual< Quadrature >( SimplicialMesh::PhongRodriguesBracketField< K >( mesh , X , Y ) );
+	Eigen::VectorXd _Z = mesh.template dual< Quadrature >( SimplicialMesh::PhongRodriguesBracketField< K >( mesh , X , Y ) );
 	if( Verbose.set ) std::cout << "Got bracket: " << timer() << std::endl;
 
 	// Compute the least-squares best-fit within the space spanned by the Phong-Rodrigues vector-field basis
