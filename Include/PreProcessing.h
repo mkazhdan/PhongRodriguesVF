@@ -33,11 +33,7 @@ DAMAGE.
 #define NOMINMAX
 #endif // _WIN32 || _WIN64
 
-#define NEW_CODE							// New/experimental code
-#define FAST_COMPILE						// Remove some of the templating options
-
-
-#define USE_MY_STEIN						// Use self-implemented Stein system
+#define FAST_COMPILE	//	 Remove some of the templating options
 
 ////////////////////////
 // Default Parameters //
@@ -52,7 +48,6 @@ DAMAGE.
 #endif // FAST_COMPILE
 
 #define DEFAULT_QUADRATURE 3
-
 
 ////////////////////////////////
 ////////////////////////////////

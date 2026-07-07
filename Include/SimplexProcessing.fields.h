@@ -136,8 +136,8 @@ namespace MishaK
 
 			// [Class members]
 
-			static T Value( Position< K > p , const T n[K+1] , const T x[K+1] );
-			static Differential< K , T > DValue( Position< K > p , const T n[K+1] , const T x[K+1] );
+			static T Value( const T n[K+1] , const T x[K+1] , Position< K > p );
+			static Differential< K , T > DValue( const T n[K+1] , const T x[K+1] , Position< K > p );
 
 			// [Object members]
 
@@ -150,10 +150,10 @@ namespace MishaK
 			const T &operator[]( unsigned int k ) const { return _x[k]; }
 
 			// The evaluation of the vector field
-			T operator()( Position< K > p ) const { return Value( p , _n , _x ); }
+			T operator()( Position< K > p ) const { return Value( _n , _x , p ); }
 
 			// The evaluation of the differential of the vector field
-			Differential< K , T > d( Position< K > p ) const { return DValue( p , _n , _x ); }
+			Differential< K , T > d( Position< K > p ) const { return DValue( _n , _x , p ); }
 
 		protected:
 			static auto /* = std::pair< std::function< T (T) > , std::function< T (T) > > */ _DTransforms( Position< K > p , const T n[K+1] , const T x[K+1] );
@@ -205,6 +205,9 @@ namespace MishaK
 			using Differential = DifferentialFieldWrapper< K , Matrix< double , K+1 , K > , PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K > >::Differential;
 			using DifferentialFieldWrapper< K , Matrix< double , K+1 , K > , PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K > >::differential;
 
+			static T Value( const SquareMatrix< double , K > & gInv , const Matrix< double , K , Dim > & i2e );
+			static SimplexProcessing::Differential< K , T > DValue( const SquareMatrix< double , K > & gInv , const SimplexProcessing::Differential< K , Matrix< double , K , Dim > > & di2e );
+
 			static T Value( const SquareMatrix< double , K > & gInv , const Point< double , Dim > & normal , const Point< double , Dim > normals[K+1] , const Matrix< double , K , Dim > & xForm , Position< K > p );
 			static SimplexProcessing::Differential< K , T > DValue( const SquareMatrix< double , K > & gInv , const Point< double , Dim > & normal , const Point< double , Dim > normals[K+1] , const Matrix< double , K , Dim > & xForm , Position< K > p );
 
@@ -224,12 +227,13 @@ namespace MishaK
 		//////////////////////////////////////////////////////////////////////////////////////////////////
 		// A field giving the connection coefficients defined by (pseudo) differential of the embedding //
 		//////////////////////////////////////////////////////////////////////////////////////////////////
-		template< unsigned int K >
+		template< unsigned int K , bool Symmetrize=false >
 		struct ConnectionCoefficientField : public PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >
 		{
 			static const unsigned int Dim = K+1;
 			using T = AutoDiff::Tensor< K , K , K >;
 
+			static T Value( const SquareMatrix< double , K > & gInv , const Matrix< double , K , Dim > & i2e , const Differential< K , Matrix< double , K , Dim > > & di2e );
 			static T Value( const SquareMatrix< double , K > & gInv , const Point< double , Dim > & normal , const Point< double , Dim > normals[K+1] , const Matrix< double , K , Dim > & xForm , Position< K > p );
 
 			ConnectionCoefficientField( const Point< double , Dim > vertices[K+1] , const Point< double , Dim > normals[K+1] );
@@ -285,6 +289,9 @@ namespace MishaK
 
 			using Differential = DifferentialFieldWrapper< K , Point< double , K > , IntrinsicVectorField< K , N , VectorField > >::Differential;
 			using DifferentialFieldWrapper< K , Point< double , K > , IntrinsicVectorField< K , N , VectorField > >::differential;
+
+			static T Value( const Matrix< double , N , K > & e2i , const Point< double , N > & v );
+			static SimplexProcessing::Differential< K , T > DValue( const Matrix< double , N , K > & e2i , const SimplexProcessing::Differential< K , Matrix< double , N , K > > & de2i , const Point< double , N > & v , const SimplexProcessing::Differential< K , Point< double , N > > & dv );
 
 			static T Value( const SquareMatrix< double , K > & gInv , const Point< double , N > & normal , const Point< double , N > normals[K+1] , const Matrix< double , K , N > & xForm , const VectorField & vf , Position< K > p );
 			static SimplexProcessing::Differential< K , T > DValue( const SquareMatrix< double , K > & gInv , const Point< double , N > & normal , const Point< double , N > normals[K+1] , const Matrix< double , K , N > & xForm , const VectorField & vf , Position< K > p );

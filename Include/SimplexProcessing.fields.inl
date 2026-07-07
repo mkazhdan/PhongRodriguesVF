@@ -85,7 +85,7 @@ Differential< K , T > LinearInterpolant< K , T >::DValue( const T x[K+1] , Posit
 // PhongRodriguesVectorField //
 ///////////////////////////////
 template< unsigned int K , unsigned int N , bool Modulate >
-typename PhongRodriguesVectorField< K , N , Modulate >::T PhongRodriguesVectorField< K , N , Modulate >::Value( Position< K > p , const T n[K+1] , const T x[K+1] )
+typename PhongRodriguesVectorField< K , N , Modulate >::T PhongRodriguesVectorField< K , N , Modulate >::Value( const T n[K+1] , const T x[K+1] , Position< K > p )
 {
 	// Compute the normal at the inteprolated position
 	T _n = LinearInterpolant< K , T >::Value( n , p );
@@ -104,7 +104,7 @@ typename PhongRodriguesVectorField< K , N , Modulate >::T PhongRodriguesVectorFi
 }
 
 template< unsigned int K , unsigned int N , bool Modulate >
-SimplexProcessing::Differential< K , typename PhongRodriguesVectorField< K , N , Modulate >::T > PhongRodriguesVectorField< K , N , Modulate >::DValue( Position< K > p , const T n[K+1] , const T x[K+1] )
+SimplexProcessing::Differential< K , typename PhongRodriguesVectorField< K , N , Modulate >::T > PhongRodriguesVectorField< K , N , Modulate >::DValue( const T n[K+1] , const T x[K+1] , Position< K > p )
 {
 	// F(p) = G( n(p) / |n(p)| )
 	// dF = dG( n(p) / |n(p)| ) * d( n(p) / |n(p)| )
@@ -224,13 +224,37 @@ typename PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::T
 PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::Value
 (
 	const SquareMatrix< double , K > & gInv ,
+	const Matrix< double , K , Dim > & i2e
+)
+{
+	return gInv * i2e.transpose();
+}
+
+template< unsigned int K >
+SimplexProcessing::Differential< K , typename PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::T >
+PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::DValue
+(
+	const SquareMatrix< double , K > & gInv ,
+	const SimplexProcessing::Differential< K , Matrix< double , K , Dim > > & di2e
+)
+{
+	SimplexProcessing::Differential< K , typename PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::T > d;
+	for( unsigned int k=0 ; k<K ; k++ ) d[k] = gInv * di2e[k].transpose();
+	return d;
+}
+
+template< unsigned int K >
+typename PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::T
+PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::Value
+(
+	const SquareMatrix< double , K > & gInv ,
 	const Point< double , Dim > & normal ,
 	const Point< double , Dim > normals[K+1] ,
 	const Matrix< double , K , Dim > & xForm ,
 	Position< K > p
 )
 {
-	return gInv * PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::Value( normal , normals , xForm , p ).transpose();
+	return Value( gInv , PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::Value( normal , normals , xForm , p ) );
 }
 
 template< unsigned int K >
@@ -244,41 +268,32 @@ PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::DValue
 	Position< K > p
 )
 {
-	SimplexProcessing::Differential< K , typename PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::T > d = PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::DValue( normal , normals , xForm , p );
-	SimplexProcessing::Differential< K , typename PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::T > d_transpose;
-	for( unsigned int k=0 ; k<K ; k++ ) d_transpose[k] = gInv * d[k].transpose();
-	return d_transpose;
+	return DValue( gInv , PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::DValue( normal , normals , xForm , p ) );
 }
 
 ////////////////////////////////
 // ConnectionCoefficientField //
 ////////////////////////////////
-
-template< unsigned int K >
-ConnectionCoefficientField< K >::ConnectionCoefficientField( const Point< double , Dim > vertices[K+1] , const Point< double , Dim > normals[K+1] ) 
+template< unsigned int K , bool Symmetrize >
+ConnectionCoefficientField< K , Symmetrize >::ConnectionCoefficientField( const Point< double , Dim > vertices[K+1] , const Point< double , Dim > normals[K+1] ) 
 	: PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >( vertices , normals ) , _gInv( MetricTensorFromEmbedding< K >( vertices ).inverse() )
 {}
 
-template< unsigned int K >
-ConnectionCoefficientField< K >::ConnectionCoefficientField( const Simplex< double , Dim , K > & vertices , const Simplex< double , Dim , K > & normals ) 
+template< unsigned int K , bool Symmetrize >
+ConnectionCoefficientField< K , Symmetrize >::ConnectionCoefficientField( const Simplex< double , Dim , K > & vertices , const Simplex< double , Dim , K > & normals ) 
 	: ConnectionCoefficientField( &vertices[0] , &normals[0] )
 {}
 
-template< unsigned int K >
-typename ConnectionCoefficientField< K >::T
-ConnectionCoefficientField< K >::Value
+template< unsigned int K , bool Symmetrize >
+typename ConnectionCoefficientField< K , Symmetrize >::T
+ConnectionCoefficientField< K , Symmetrize >::Value
 (
 	const SquareMatrix< double , K > & gInv ,
-	const Point< double , Dim > & normal ,
-	const Point< double , Dim > normals[K+1] ,
-	const Matrix< double , K , Dim > & xForm ,
-	Position< K > p
+	const Matrix< double , K , Dim > & i2e ,
+	const Differential< K , Matrix< double , K , Dim > > & di2e
 )
 {
 	T C;
-
-	Matrix< double , K , Dim > i2e = PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::Value( normal , normals , xForm , p );
-	SimplexProcessing::Differential< K , Matrix< double , K , Dim > > di2e = PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::DValue( normal , normals , xForm , p );
 
 	// The coordinate acting as the vector field, and the coordinate along which we differentiate:
 	for( unsigned int i=0 ; i<K ; i++ ) for( unsigned int j=0 ; j<K ; j++ )
@@ -290,12 +305,55 @@ ConnectionCoefficientField< K >::Value
 		for( unsigned int k=0 ; k<K ; k++ ) C(i,j,k) = coeff[k];
 	}
 
+	if constexpr( Symmetrize )
+		for( unsigned int k=0 ; k<K ; k++ ) for( unsigned int l=0 ; l<k ; l++ ) for( unsigned int m=0 ; m<K ; m++ ) C(k,l,m) = C(l,k,m) = ( C(k,l,m) + C(l,k,m) ) / 2.;
+
 	return C;
+}
+
+template< unsigned int K , bool Symmetrize >
+typename ConnectionCoefficientField< K , Symmetrize >::T
+ConnectionCoefficientField< K , Symmetrize >::Value
+(
+	const SquareMatrix< double , K > & gInv ,
+	const Point< double , Dim > & normal ,
+	const Point< double , Dim > normals[K+1] ,
+	const Matrix< double , K , Dim > & xForm ,
+	Position< K > p
+)
+{
+	return Value( gInv , PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::Value( normal , normals , xForm , p ) , PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::DValue( normal , normals , xForm , p ) );
 }
 
 //////////////////////////
 // IntrinsicVectorField //
 //////////////////////////
+template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
+typename IntrinsicVectorField< K , N , VectorField >::T
+IntrinsicVectorField< K , N , VectorField >::Value
+(
+	const Matrix< double , N , K > & e2i ,
+	const Point< double , N > & v
+)
+{
+	return e2i * v;
+}
+
+template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
+SimplexProcessing::Differential< K , typename IntrinsicVectorField< K , N , VectorField >::T >
+IntrinsicVectorField< K , N , VectorField >::DValue
+(
+	const Matrix< double , N , K > & e2i ,
+	const SimplexProcessing::Differential< K , Matrix< double , N , K > > & de2i ,
+	const Point< double , N > & v ,
+	const SimplexProcessing::Differential< K , Point< double , N > > & dv
+)
+{
+	SimplexProcessing::Differential< K , T > d;
+	for( unsigned int k=0 ; k<K ; k++ ) d[k] = de2i[k] * v + e2i * dv[k];
+	return d;
+}
+
 template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
 typename IntrinsicVectorField< K , N , VectorField >::T
 IntrinsicVectorField< K , N , VectorField >::Value
@@ -308,7 +366,7 @@ IntrinsicVectorField< K , N , VectorField >::Value
 	Position< K > p
 )
 {
-	return PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::Value( gInv , normal , normals , xForm , p ) * VF(p);
+	return Value( PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::Value( gInv , normal , normals , xForm , p ) , VF(p) );
 }
 
 template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
@@ -323,17 +381,7 @@ IntrinsicVectorField< K , N , VectorField >::DValue
 	Position< K > p
 )
 {
-	SimplexProcessing::Differential< K , T > d;
-
-	Point< double , N > v = VF(p);
-	SimplexProcessing::Differential< K , Point< double , N > > dv = VF.d(p);
-
-	Matrix< double , N , K > e2i = PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::Value( gInv , normal , normals , xForm , p );
-	SimplexProcessing::Differential< K , Matrix< double , N , K > > de2i = PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::DValue( gInv , normal , normals , xForm , p );
-
-	for( unsigned int k=0 ; k<K ; k++ ) d[k] = de2i[k] * v + e2i * dv[k];
-
-	return d;
+	return DValue( PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::Value( gInv , normal , normals , xForm , p ) , PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::DValue( gInv , normal , normals , xForm , p ) , VF(p) , VF.d(p) );
 }
 
 ////////////////////////////////

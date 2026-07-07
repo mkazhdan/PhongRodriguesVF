@@ -477,13 +477,17 @@ Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::vectorBracketEnergy( Tange
 
 	auto Sys = [&]( size_t sIdx )
 	{
-			return [tE2I=SimplexProcessing::PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >(simplexVertices(sIdx),simplexNormals(sIdx)),tG=this->metricTensorField(sIdx),tGInv=this->inverseMetricTensorField(sIdx),tV=V[sIdx]]( SimplexProcessing::Position< K > p )
+		return [tE2I=SimplexProcessing::PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >(simplexVertices(sIdx),simplexNormals(sIdx)),tN=this->normalField(sIdx),tG=this->metricTensorField(sIdx),tGInv=this->inverseMetricTensorField(sIdx),tV=V[sIdx]]( SimplexProcessing::Position< K > p )
 		{
-				return [e2i=tE2I(p),g=tG(p),gInv=tGInv(p),v=tV(p),dv=tV.d(p)]( const std::pair< Vector , SimplexProcessing::Differential< K , Vector > > d[] )
+			return [e2i=tE2I(p),n=tN(p),gInv=tGInv(p),v=tV(p),dv=tV.d(p)]( const std::pair< Vector , SimplexProcessing::Differential< K , Vector > > d[] )
 			{
-					Point< double , K > _x = e2i * v;
+				Point< double , K > _x = e2i * v;
 				Point< double , K+1 > _z[ NumE ];
-				for( unsigned int n=0 ; n<NumE ; n++ ) _z[n] = d[n].second( _x ) - dv( e2i * d[n].first );
+				for( unsigned int e=0 ; e<NumE ; e++ )
+				{
+					_z[e] = d[e].second( _x ) - dv( e2i * d[e].first );
+					_z[e] -= n * Point< double , K+1 >::Dot( _z[e] , n );
+				}
 
 				SquareMatrix< double , NumE > mass;
 				for( unsigned int n=0 ; n<NumE ; n++ ) for( unsigned int m=0 ; m<NumE ; m++ )
@@ -682,13 +686,17 @@ SquareMatrix< double , (K+1)*(K+1) > EmbeddedPhongMesh< K >::simplexVectorBracke
 
 	auto Sys = [&]( size_t sIdx )
 	{
-			return [tE2I=SimplexProcessing::PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >(simplexVertices(sIdx),simplexNormals(sIdx)),tG=this->metricTensorField(sIdx),tGInv=this->inverseMetricTensorField(sIdx),tV=V[sIdx]]( SimplexProcessing::Position< K > p )
+		return [tE2I=SimplexProcessing::PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >(simplexVertices(sIdx),simplexNormals(sIdx)),tN=this->normalField(sIdx),tG=this->metricTensorField(sIdx),tGInv=this->inverseMetricTensorField(sIdx),tV=V[sIdx]]( SimplexProcessing::Position< K > p )
 		{
-				return [e2i=tE2I(p),g=tG(p),gInv=tGInv(p),v=tV(p),dv=tV.d(p)]( const std::pair< Vector , SimplexProcessing::Differential< K , Vector > > d[] )
+			return [e2i=tE2I(p),n=tN(p),g=tG(p),gInv=tGInv(p),v=tV(p),dv=tV.d(p)]( const std::pair< Vector , SimplexProcessing::Differential< K , Vector > > d[] )
 			{
-					Point< double , K > _x = e2i * v;
+				Point< double , K > _x = e2i * v;
 				Point< double , K+1 > _z[ NumE ];
-				for( unsigned int n=0 ; n<NumE ; n++ ) _z[n] = d[n].second( _x ) - dv( e2i * d[n].first );
+				for( unsigned int e=0 ; e<NumE ; e++ )
+				{
+					_z[e] = d[e].second( _x ) - dv( e2i * d[e].first );
+					_z[e] -= n * Point< double , K+1 >::Dot( n , _z[e] );
+				}
 
 				SquareMatrix< double , NumE > mass;
 				for( unsigned int n=0 ; n<NumE ; n++ ) for( unsigned int m=0 ; m<NumE ; m++ )
