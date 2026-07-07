@@ -35,20 +35,14 @@ namespace MishaK
 	{
 		namespace SystemIntegration
 		{
+			template< unsigned int K , unsigned int NumF , typename T , typename TestFunctions /* = Samples< Fields< K , T > > */ , typename BilinearForms /* = Field< K , BilinearForm< T > */ >
+			auto SystemVectorField( TestFunctions && Fs , BilinearForms && B );
+
 			template< unsigned int K , unsigned int NumF , typename T , typename Function /* = Field< K , T > */ , typename TestFunctions /* = Samples< Fields< K , T > > */ , typename BilinearForms /* = Field< K , BilinearForm< T > */ >
 			auto SystemVectorField( Function && F , TestFunctions && Fs , BilinearForms && B );
 
 			template< unsigned int K , unsigned int NumF , typename T , typename TestFunctions /* = Samples< Fields< K , T > > */ , typename BilinearForms /* = Field< K , BilinearForm< T > */ >
 			auto SystemMatrixField( TestFunctions && Fs , BilinearForms && B );
-
-			template< unsigned int K , unsigned int NumF , typename T , typename ScaleFactors /* = Samples< Field< K , ScaleFactor > > */ , typename Function /* = Field< K , T > */ , typename TestFunctions /* = Samples< Fields< K , T > > */ , typename BilinearForms /* = Field< K , BilinearForm< T > */ >
-			auto ScaledSystemVectorField( ScaleFactors && SF , Function && F , TestFunctions && Fs , BilinearForms && B );
-
-			template< unsigned int K , unsigned int NumF , typename T , typename ScaleFactors /* = Samples< Field< K , ScaleFactor > > */ , typename TestFunctions /* = Samples< Fields< K , T > > */ , typename BilinearForms /* = Field< K , BilinearForm< T > */ >
-			auto ScaledSystemMatrixField( ScaleFactors && SF , TestFunctions && Fs , BilinearForms && B );
-
-			template< unsigned int K , unsigned int NumF , typename T , typename ScaleFactors /* = Samples< Field< K , ScaleFactor > > */ , typename Field /* = Samples< K , T > */ >
-			auto ScaledField( ScaleFactors && SF , Field && F );
 
 			template< unsigned int NumElementsPerSimplex >
 			struct EigenMatrixEntries

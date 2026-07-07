@@ -113,7 +113,7 @@ template< unsigned int K , typename MeshType >
 template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasMeshFunction< K , T > ValueField , typename Elements , typename ElementIndex , HasMeshScaleFactorFunction< K > ScaleFactorField >
 Eigen::VectorXd RiemannianMesh< K , MeshType >::_dual( size_t fNum , Elements && E , ValueField && F , ElementIndex && Idx , ScaleFactorField && S ) const
 {
-	auto VF = SystemIntegration::ScaledSystemVectorField< K , NumElementsPerSimplex , T >( std::forward< ScaleFactorField >( S ) , std::forward< ValueField >( F ) , std::forward< Elements >( E ) , this->template _scaledIdentityField< T >( measureScaleField() ) );
+	auto VF = ScaledField< K >( std::forward< ScaleFactorField >( S ) , SystemIntegration::SystemVectorField< K , NumElementsPerSimplex , T >( std::forward< ValueField >( F ) , std::forward< Elements >( E ) , this->template _scaledIdentityField< T >( measureScaleField() ) ) );
 	return SystemIntegration::MCIntegrator< K , QuadratureSamples >::template Vector< NumElementsPerSimplex >( fNum , simplexNum() , std::forward< ElementIndex >( Idx ) , VF );
 }
 
@@ -121,7 +121,7 @@ template< unsigned int K , typename MeshType >
 template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasMeshFunction< K , SimplexProcessing::Differential< K , T > > DifferentialField , typename Elements , typename ElementIndex , HasMeshScaleFactorFunction< K > ScaleFactorField >
 Eigen::VectorXd RiemannianMesh< K , MeshType >::_dual( size_t fNum , Elements && E , DifferentialField && F , ElementIndex && Idx , ScaleFactorField && S ) const
 {
-	auto VF = SystemIntegration::ScaledSystemVectorField< K , NumElementsPerSimplex , SimplexProcessing::Differential< K , T > >( std::forward< ScaleFactorField >( S ) , std::forward< DifferentialField >( F ) , _DifferentialElements( E ) , this->template _scaledInverseMetricTensorField< T >( measureScaleField() ) );
+	auto VF = ScaledField< K >( std::forward< ScaleFactorField >( S ) , SystemIntegration::SystemVectorField< K , NumElementsPerSimplex , SimplexProcessing::Differential< K , T > >( std::forward< DifferentialField >( F ) , _DifferentialElements( E ) , this->template _scaledInverseMetricTensorField< T >( measureScaleField() ) ) );
 	return SystemIntegration::MCIntegrator< K , QuadratureSamples >::template Vector< NumElementsPerSimplex >( fNum , simplexNum() , std::forward< ElementIndex >( Idx ) , VF );
 }
 
@@ -154,7 +154,7 @@ template< unsigned int K , typename MeshType >
 template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , typename ElementIndex , HasMeshScaleFactorFunction< K > ScaleFactorField >
 Eigen::SparseMatrix< double > RiemannianMesh< K , MeshType >::_mass( size_t fNum , Elements && E , ElementIndex && Idx , ScaleFactorField && S ) const
 {
-	auto MF = SystemIntegration::ScaledSystemMatrixField< K , NumElementsPerSimplex , T >( std::forward< ScaleFactorField >( S ) , std::forward< Elements >( E ) , this->template _scaledIdentityField< T >( measureScaleField() ) );
+	auto MF = ScaledField< K >( std::forward< ScaleFactorField >( S ) , SystemIntegration::SystemMatrixField< K , NumElementsPerSimplex , T >( std::forward< Elements >( E ) , this->template _scaledIdentityField< T >( measureScaleField() ) ) );
 	return SystemIntegration::MCIntegrator< K , QuadratureSamples >::template Matrix< NumElementsPerSimplex >( fNum , simplexNum() , std::forward< ElementIndex >( Idx ) , MF );
 }
 
@@ -170,10 +170,9 @@ template< unsigned int K , typename MeshType >
 template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , typename ElementIndex , HasMeshScaleFactorFunction< K > ScaleFactorField >
 Eigen::SparseMatrix< double > RiemannianMesh< K , MeshType >::_stiffness( size_t fNum , Elements && E , ElementIndex && Idx , ScaleFactorField && S ) const
 {
-	auto MF = SystemIntegration::ScaledSystemMatrixField< K , NumElementsPerSimplex , SimplexProcessing::Differential< K , T > >( std::forward< ScaleFactorField >( S ) , _DifferentialElements( E ) , this->template _scaledInverseMetricTensorField< T >( measureScaleField() ) );
+	auto MF = ScaledField< K >( std::forward< ScaleFactorField >( S ) , SystemIntegration::SystemMatrixField< K , NumElementsPerSimplex , SimplexProcessing::Differential< K , T > >( _DifferentialElements( E ) , this->template _scaledInverseMetricTensorField< T >( measureScaleField() ) ) );
 	return SystemIntegration::MCIntegrator< K , QuadratureSamples >::template Matrix< NumElementsPerSimplex >( fNum , simplexNum() , std::forward< ElementIndex >( Idx ) , MF );
 }
-
 
 template< unsigned int K , typename MeshType >
 template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , typename ElementIndex , HasMeshSystemLinearMapOrBilinearFormFunction< K , NumElementsPerSimplex , T > SystemField >
@@ -181,7 +180,7 @@ Eigen::SparseMatrix< double > RiemannianMesh< K , MeshType >::_system( size_t fN
 {
 	if( needsScaling )
 	{
-		auto MF = SystemIntegration::ScaledSystemMatrixField< K , NumElementsPerSimplex , T >( measureScaleField() , std::forward< Elements >( E ) , std::forward< SystemField >( Sys ) );
+		auto MF = ScaledField< K >( measureScaleField() , SystemIntegration::SystemMatrixField< K , NumElementsPerSimplex , T >( std::forward< Elements >( E ) , std::forward< SystemField >( Sys ) ) );
 		return SystemIntegration::MCIntegrator< K , QuadratureSamples >::template Matrix< NumElementsPerSimplex >( fNum , simplexNum() , std::forward< ElementIndex >( Idx ) , MF );
 	}
 	else
@@ -197,7 +196,7 @@ Eigen::SparseMatrix< double > RiemannianMesh< K , MeshType >::_system( size_t fN
 {
 	if( needsScaling )
 	{
-		auto MF = SystemIntegration::ScaledSystemMatrixField< K , NumElementsPerSimplex , SimplexProcessing::Differential< K , T > >( measureScaleField() , _DifferentialElements( E ) , std::forward< SystemField >( Sys ) );
+		auto MF = ScaledField< K >( measureScaleField() , SystemIntegration::SystemMatrixField< K , NumElementsPerSimplex , SimplexProcessing::Differential< K , T > >( _DifferentialElements( E ) , std::forward< SystemField >( Sys ) ) );
 		return SystemIntegration::MCIntegrator< K , QuadratureSamples >::template Matrix< NumElementsPerSimplex >( fNum , simplexNum() , std::forward< ElementIndex >( Idx ) , MF );
 	}
 	else
@@ -213,7 +212,7 @@ Eigen::SparseMatrix< double > RiemannianMesh< K , MeshType >::_system( size_t fN
 {
 	if( needsScaling )
 	{
-		auto MF = SystemIntegration::ScaledSystemMatrixField< K , NumElementsPerSimplex , std::pair< T , SimplexProcessing::Differential< K , T > > >( measureScaleField() , _ValueAndDifferentialElements( E ) , std::forward< SystemField >( Sys ) );
+		auto MF = ScaledField< K >( measureScaleField() , SystemIntegration::SystemMatrixField< K , NumElementsPerSimplex , std::pair< T , SimplexProcessing::Differential< K , T > > >( _ValueAndDifferentialElements( E ) , std::forward< SystemField >( Sys ) ) );
 		return SystemIntegration::MCIntegrator< K , QuadratureSamples >::template Matrix< NumElementsPerSimplex >( fNum , simplexNum() , std::forward< ElementIndex >( Idx )  , MF );
 	}
 	else
@@ -235,7 +234,7 @@ template< unsigned int K , typename MeshType >
 template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , HasMeshScaleFactorFunction< K > ScaleFactorField >
 SquareMatrix< double , NumElementsPerSimplex > RiemannianMesh< K , MeshType >::_simplexMass( size_t sIdx , Elements && E , ScaleFactorField && S ) const
 {
-	auto MF = SystemIntegration::ScaledSystemMatrixField< K , NumElementsPerSimplex , T >( std::forward< ScaleFactorField >( S ) , std::forward< Elements >( E ) , this->template _scaledIdentityField< T >( measureScaleField() ) );
+	auto MF = ScaledField< K >( std::forward< ScaleFactorField >( S ) , SystemIntegration::SystemMatrixField< K , NumElementsPerSimplex , T >( std::forward< Elements >( E ) , this->template _scaledIdentityField< T >( measureScaleField() ) ) );
 	return SimplexProcessing::SystemIntegration::MCIntegrator< K , QuadratureSamples >::template Integral< SquareMatrix< double , NumElementsPerSimplex > >( MF[sIdx] );
 }
 
@@ -251,7 +250,7 @@ template< unsigned int K , typename MeshType >
 template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , HasMeshScaleFactorFunction< K > ScaleFactorField >
 SquareMatrix< double , NumElementsPerSimplex > RiemannianMesh< K , MeshType >::_simplexStiffness( size_t sIdx , Elements && E , ScaleFactorField && S ) const
 {
-	auto MF = SystemIntegration::ScaledSystemMatrixField< K , NumElementsPerSimplex , SimplexProcessing::Differential< K , T > >( std::forward< ScaleFactorField >( S ) , _DifferentialElements( E ) , this->template _scaledInverseMetricTensorField< T >( measureScaleField() ) );
+	auto MF = ScaledField< K >( std::forward< ScaleFactorField >( S ) , SystemIntegration::SystemMatrixField< K , NumElementsPerSimplex , SimplexProcessing::Differential< K , T > >( _DifferentialElements( E ) , this->template _scaledInverseMetricTensorField< T >( measureScaleField() ) ) );
 	return SimplexProcessing::SystemIntegration::MCIntegrator< K , QuadratureSamples >::template Integral< SquareMatrix< double , NumElementsPerSimplex > >( MF[sIdx] );
 }
 
@@ -259,7 +258,7 @@ template< unsigned int K , typename MeshType >
 template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , HasMeshSystemLinearMapOrBilinearFormFunction< K , NumElementsPerSimplex , T > SystemField >
 SquareMatrix< double , NumElementsPerSimplex > RiemannianMesh< K , MeshType >::_simplexSystem( size_t sIdx , Elements && E , SystemField && Sys ) const
 {
-	auto MF = SystemIntegration::ScaledSystemMatrixField< K , NumElementsPerSimplex , T >( measureScaleField() , std::forward< Elements >( E ) , std::forward< SystemField >( Sys ) );
+	auto MF = ScaledField< K >( measureScaleField() , SystemIntegration::SystemMatrixField< K , NumElementsPerSimplex , T >( std::forward< Elements >( E ) , std::forward< SystemField >( Sys ) ) );
 	return SimplexProcessing::SystemIntegration::MCIntegrator< K , QuadratureSamples >::template Integral< SquareMatrix< double , NumElementsPerSimplex > >( MF[sIdx] );
 }
 
@@ -267,7 +266,7 @@ template< unsigned int K , typename MeshType >
 template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , HasMeshDSystemFunction< K , NumElementsPerSimplex , T > SystemField >
 SquareMatrix< double , NumElementsPerSimplex > RiemannianMesh< K , MeshType >::_simplexSystem( size_t sIdx , Elements && E , SystemField && Sys ) const
 {
-	auto MF = SystemIntegration::ScaledSystemMatrixField< K , NumElementsPerSimplex , SimplexProcessing::Differential< K , T > >( measureScaleField() , _DifferentialElements( E ) , std::forward< SystemField >( Sys ) );
+	auto MF = ScaledField< K >( measureScaleField() , SystemIntegration::SystemMatrixField< K , NumElementsPerSimplex , SimplexProcessing::Differential< K , T > >( _DifferentialElements( E ) , std::forward< SystemField >( Sys ) ) );
 	return SimplexProcessing::SystemIntegration::MCIntegrator< K , QuadratureSamples >::template Integral< SquareMatrix< double , NumElementsPerSimplex > >( MF[sIdx] );
 }
 
@@ -275,7 +274,7 @@ template< unsigned int K , typename MeshType >
 template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , HasMeshSystemAndDSystemFunction< K , NumElementsPerSimplex , T > SystemField >
 SquareMatrix< double , NumElementsPerSimplex > RiemannianMesh< K , MeshType >::_simplexSystem( size_t sIdx , Elements && E , SystemField && Sys ) const
 {
-	auto MF = SystemIntegration::ScaledSystemMatrixField< K , NumElementsPerSimplex , std::pair< T , SimplexProcessing::Differential< K , T > > >( measureScaleField() , _ValueAndDifferentialElements( E ) , std::forward< SystemField >( Sys ) );
+	auto MF = ScaledField< K >( measureScaleField() , SystemIntegration::SystemMatrixField< K , NumElementsPerSimplex , std::pair< T , SimplexProcessing::Differential< K , T > > >( _ValueAndDifferentialElements( E ) , std::forward< SystemField >( Sys ) ) );
 	return SimplexProcessing::SystemIntegration::MCIntegrator< K , QuadratureSamples >::template Integral< SquareMatrix< double , NumElementsPerSimplex > >( MF[sIdx] );
 }
 
@@ -290,7 +289,7 @@ template< unsigned int K , typename MeshType >
 template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , HasMeshSystemLinearMapOrBilinearFormFunction< K , NumElementsPerSimplex , T > SystemField >
 void RiemannianMesh< K , MeshType >::_setSystemEntries( SystemIntegration::EigenMatrixEntries< NumElementsPerSimplex > & eme , Elements && E , SystemField && Sys ) const
 {
-	auto MF = SystemIntegration::ScaledSystemMatrixField< K , NumElementsPerSimplex , T >( measureScaleField() , std::forward< Elements >( E ) , std::forward< SystemField >( Sys ) );
+	auto MF = ScaledField< K >( measureScaleField() , SystemIntegration::SystemMatrixField< K , NumElementsPerSimplex , T >( std::forward< Elements >( E ) , std::forward< SystemField >( Sys ) ) );
 	return SystemIntegration::MCIntegrator< K , QuadratureSamples >::template SetMatrixEntries< NumElementsPerSimplex >( eme , simplexNum() , MF );
 }
 
@@ -298,7 +297,7 @@ template< unsigned int K , typename MeshType >
 template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , HasMeshDSystemFunction< K , NumElementsPerSimplex , T > SystemField >
 void RiemannianMesh< K , MeshType >::_setSystemEntries( SystemIntegration::EigenMatrixEntries< NumElementsPerSimplex > & eme , Elements && E , SystemField && Sys ) const
 {
-	auto MF = SystemIntegration::ScaledSystemMatrixField< K , NumElementsPerSimplex , SimplexProcessing::Differential< K , T > >( measureScaleField() , _DifferentialElements( E ) , std::forward< SystemField >( Sys ) );
+	auto MF = ScaledField< K >( measureScaleField() , SystemIntegration::SystemMatrixField< K , NumElementsPerSimplex , SimplexProcessing::Differential< K , T > >( _DifferentialElements( E ) , std::forward< SystemField >( Sys ) ) );
 	return SystemIntegration::MCIntegrator< K , QuadratureSamples >::template SetMatrixEntries< NumElementsPerSimplex >( eme , simplexNum() , MF );
 }
 
@@ -306,7 +305,7 @@ template< unsigned int K , typename MeshType >
 template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , HasMeshSystemAndDSystemFunction< K , NumElementsPerSimplex , T > SystemField >
 void RiemannianMesh< K , MeshType >::_setSystemEntries( SystemIntegration::EigenMatrixEntries< NumElementsPerSimplex > & eme , Elements && E , SystemField && Sys ) const
 {
-	auto MF = SystemIntegration::ScaledSystemMatrixField< K , NumElementsPerSimplex , std::pair< T , SimplexProcessing::Differential< K , T > > >( measureScaleField() , _ValueAndDifferentialElements( E ) , std::forward< SystemField >( Sys ) );
+	auto MF = ScaledField< K >( measureScaleField() , SystemIntegration::SystemMatrixField< K , NumElementsPerSimplex , std::pair< T , SimplexProcessing::Differential< K , T > > >( _ValueAndDifferentialElements( E ) , std::forward< SystemField >( Sys ) ) );
 	return SystemIntegration::MCIntegrator< K , QuadratureSamples >::template SetMatrixEntries< NumElementsPerSimplex >( eme , simplexNum() , MF );
 }
 

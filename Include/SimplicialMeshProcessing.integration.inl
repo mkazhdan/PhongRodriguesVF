@@ -26,6 +26,12 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 DAMAGE.
 */
 
+template< unsigned int K , unsigned int NumF , typename T , typename TestFunctions /* = Samples< Fields< K , T > > */ , typename BilinearForms /* = Field< K , BilinearForm< T > */ >
+auto SystemVectorField( TestFunctions && Fs , BilinearForms && B )
+{
+	return SimplexProcessing::ArrayWrapper( [Fs,B]( size_t sIdx ){ return SimplexProcessing::SystemIntegration::SystemVectorField< K , NumF , T >( Fs[sIdx] , B[sIdx] ); } );
+}
+
 template< unsigned int K , unsigned int NumF , typename T , typename Function /* = Field< K , T > */ , typename TestFunctions /* = Samples< Fields< K , T > > */ , typename BilinearForms /* = Field< K , BilinearForm< T > */ >
 auto SystemVectorField( Function && F , TestFunctions && Fs , BilinearForms && B )
 {
@@ -38,28 +44,9 @@ auto SystemMatrixField( TestFunctions && Fs , BilinearForms && B )
 	return SimplexProcessing::ArrayWrapper( [Fs,B]( size_t sIdx ){ return SimplexProcessing::SystemIntegration::SystemMatrixField< K , NumF , T >( Fs[sIdx] , B[sIdx] ); } );
 }
 
-template< unsigned int K , unsigned int NumF , typename T , typename ScaleFactors /* = Samples< Field< K , ScaleFactor > > */ , typename Function /* = Field< K , T > */ , typename TestFunctions /* = Samples< Fields< K , T > > */ , typename BilinearForms /* = Field< K , BilinearForm< T > */ >
-auto ScaledSystemVectorField( ScaleFactors && SF , Function && F , TestFunctions && Fs , BilinearForms && B )
-{
-	return SimplexProcessing::ArrayWrapper( [SF,F,Fs,B]( size_t sIdx ){ return SimplexProcessing::SystemIntegration::ScaledSystemVectorField< K , NumF , T >( SF[sIdx] , F[sIdx] , Fs[sIdx] , B[sIdx] ); } );
-}
-
-template< unsigned int K , unsigned int NumF , typename T , typename ScaleFactors /* = Samples< Field< K , ScaleFactor > > */ , typename TestFunctions /* = Samples< Fields< K , T > > */ , typename BilinearForms /* = Field< K , BilinearForm< T > */ >
-auto ScaledSystemMatrixField( ScaleFactors && SF , TestFunctions && Fs , BilinearForms && B )
-{
-	return SimplexProcessing::ArrayWrapper( [SF,Fs,B]( size_t sIdx ){ return SimplexProcessing::SystemIntegration::ScaledSystemMatrixField< K , NumF , T >( SF[sIdx] , Fs[sIdx] , B[sIdx] ); } );
-}
-
-template< unsigned int K , unsigned int NumF , typename T , typename ScaleFactors /* = Samples< Field< K , ScaleFactor > > */ , typename Field /* = Samples< K , T > */ >
-auto ScaledField( ScaleFactors && SF , Field && F )
-{
-	return SimplexProcessing::ArrayWrapper( [SF,F]( size_t sIdx ){ return SimplexProcessing::SystemIntegration::ScaledField< K , NumF , T >( SF[sIdx] , F[sIdx] ); } );
-}
-
 //////////////////
 // MCIntegrator //
 //////////////////
-
 template< unsigned int K , unsigned int QuadratureSamples >
 template< typename T , HasMeshFunction< K , T > Function  >
 T MCIntegrator< K , QuadratureSamples >::Integral( size_t numS , Function && F )

@@ -35,41 +35,28 @@ namespace MishaK
 	{
 		namespace SystemIntegration
 		{
-			// Functionality taking a function, an array of test functions, and a bilinear form field and returing the system vector field
-			template< unsigned int K , unsigned int NumF , typename T , HasSimplexFunction< K , T > Function , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexlinearMapFunction< K , T > BilinearForms >
-			auto SystemVectorField( Function && F , TestFunctions && Fs , BilinearForms && B );
+			// Functionality for constructing system constraints, expressed relative to the test functions
+			template< unsigned int K , unsigned int NumF , typename T , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexSystemVectorFunction< K , NumF , T > SystemVectors >
+			auto SystemVectorField( TestFunctions && Fs , SystemVectors && S );
+
+			template< unsigned int K , unsigned int NumF , typename T , HasSimplexFunction< K , T > Function , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexlinearMapFunction< K , T > LinearMaps >
+			auto SystemVectorField( Function && F , TestFunctions && Fs , LinearMaps && L );
 
 			template< unsigned int K , unsigned int NumF , typename T , HasSimplexFunction< K , T > Function , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexBilinearFormFunction< K , T > BilinearForms >
 				requires( !HasSimplexlinearMapFunction< BilinearForms , K , T > )
 			auto SystemVectorField( Function && F , TestFunctions && Fs , BilinearForms && B );
 
-			template< unsigned int K , unsigned int NumF , typename T , HasSimplexFunction< K , T > Function , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexSystemVectorFunction< K , NumF , T > BilinearForms >
-				requires( !HasSimplexlinearMapFunction< BilinearForms , K , T > && !HasSimplexBilinearFormFunction< BilinearForms , K , T > )
-			auto SystemVectorField( Function && F , TestFunctions && Fs , BilinearForms && B );
+			// Functionality for constructing system constraints, expressed relative to the test functions
+			template< unsigned int K , unsigned int NumF , typename T , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexSystemMatrixFunction< K , NumF , T > SystemMatrices >
+				requires( !HasSimplexlinearMapFunction< SystemMatrices , K , T > && !HasSimplexBilinearFormFunction< SystemMatrices , K , T > )
+			auto SystemMatrixField( TestFunctions && Fs , SystemMatrices && S );
 
-			// Functionality taking an array of test functions, and a bilinear form field and returing the system matrix field
-			template< unsigned int K , unsigned int NumF , typename T , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexlinearMapFunction< K , T > BilinearForms >
-			auto SystemMatrixField( TestFunctions && Fs , BilinearForms && B );
+			template< unsigned int K , unsigned int NumF , typename T , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexlinearMapFunction< K , T > LinearMaps >
+			auto SystemMatrixField( TestFunctions && Fs , LinearMaps && L );
 
 			template< unsigned int K , unsigned int NumF , typename T , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexBilinearFormFunction< K , T > BilinearForms >
 				requires( !HasSimplexlinearMapFunction< BilinearForms , K , T > )
 			auto SystemMatrixField( TestFunctions && Fs , BilinearForms && B );
-
-			template< unsigned int K , unsigned int NumF , typename T , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexSystemMatrixFunction< K , NumF , T > BilinearForms >
-				requires( !HasSimplexlinearMapFunction< BilinearForms , K , T > && !HasSimplexBilinearFormFunction< BilinearForms , K , T > )
-			auto SystemMatrixField( TestFunctions && Fs , BilinearForms && B );
-
-			// Functionality taking a scalar field, a function, an array of test functions, and a bilinear form field and returing the system vector field
-			template< unsigned int K , unsigned int NumF , typename T , HasSimplexFunction< K , ScaleFactor > ScaleFactors , HasSimplexFunction< K , T > Function , HasArrayOfSimplexFunctions< K , T > TestFunctions , typename BilinearForms /* = Field< K , BilinearForm< T > */ >
-			auto ScaledSystemVectorField( ScaleFactors && SF , Function && F , TestFunctions && Fs , BilinearForms && B );
-
-			// Functionality taking a scalar field, an array of test functions, and a bilinear form field and returing the system matrix field
-			template< unsigned int K , unsigned int NumF , typename T , HasSimplexFunction< K , ScaleFactor > ScaleFactors , HasArrayOfSimplexFunctions< K , T > TestFunctions , typename BilinearForms /* = Field< K , BilinearForm< T > */ >
-			auto ScaledSystemMatrixField( ScaleFactors && SF , TestFunctions && Fs , BilinearForms && B );
-
-			// Functionality taking a scalar field, and a field and return the scaled field
-			template< unsigned int K , unsigned int NumF , typename T , HasSimplexFunction< K , ScaleFactor > ScaleFactors , HasSimplexFunction< K , T > Field >
-			auto ScaledField( ScaleFactors && SF , Field && F );
 
 			// A dimension-templated wrapper for the segment/triangle/tet integrators
 			template< unsigned int K , unsigned int QuadratureSamples >

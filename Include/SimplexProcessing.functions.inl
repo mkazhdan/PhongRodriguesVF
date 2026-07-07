@@ -225,3 +225,9 @@ SquareMatrix< double , K > CovariantDerivative( AutoDiff::Tensor< K , K , K > ga
 	}
 	return d;
 }
+
+template< unsigned int K , HasSimplexFunction< K , ScaleFactor > ScaleFactorField , HasSimplexInvocable< K > Field >
+auto ScaledField( ScaleFactorField && SF , Field && F )
+{
+	return [_SF=std::forward< ScaleFactorField >(SF),_F=std::forward< Field >(F)]( Position< K > p ){ return _SF(p) * _F(p); };
+}

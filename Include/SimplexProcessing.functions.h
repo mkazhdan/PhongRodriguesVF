@@ -89,6 +89,10 @@ namespace MishaK
 		template< unsigned int K >
 		SquareMatrix< double , K > CovariantDerivative( AutoDiff::Tensor< K , K , K > gamma , Point< double , K > coords , Differential< K , Point< double , K > > dCoords );
 
+		// Takes a scale-factor field and a field, and return the scaled field
+		template< unsigned int K , HasSimplexFunction< K , ScaleFactor > ScaleFactorField , HasSimplexInvocable< K > Field >
+		auto ScaledField( ScaleFactorField && SF , Field && F );
+
 #include "SimplexProcessing.functions.inl"
 	}
 }

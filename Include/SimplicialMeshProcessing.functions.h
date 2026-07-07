@@ -26,42 +26,18 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 DAMAGE.
 */
 
-#ifndef SIMPLEX_PROCESSING_ELEMENTS_INCLUDED
-#define SIMPLEX_PROCESSING_ELEMENTS_INCLUDED
+#ifndef SIMPLICIAL_MESH_PROCESSING_FUNCTIONS_INCLUDED
+#define SIMPLICIAL_MESH_PROCESSING_FUNCTIONS_INCLUDED
 
 namespace MishaK
 {
-	///////////////////////////////////
-	// First-order Lagrange elements //
-	///////////////////////////////////
-	namespace SimplexProcessing
+	namespace SimplicialMesh
 	{
-		template< unsigned int K >
-		struct LinearElements
+		template< unsigned int K , HasMeshScaleFactorFunction< K > ScaleFactors , HasMeshInvocable< K > Field >
+		auto ScaledField( ScaleFactors && SF , Field && F )
 		{
-			static const unsigned int NumElements = K+1;
-
-			LinearElements( void );
-			LinearInterpolant< K , double > operator[]( size_t k ) const { return _f[k]; }
-		protected:
-			LinearInterpolant< K , double > _f[NumElements];
-		};
-
-		/////////////////////////////////////////////////////
-		// Phong-Rodrigues extrinsic vector-field elements //
-		/////////////////////////////////////////////////////
-		template< unsigned int K , unsigned int N , bool Modulate=true >
-		struct PhongRodriguesVectorElements
-		{
-			static const unsigned int NumElements = (K+1)*N;
-
-			PhongRodriguesVectorElements( const Point< double , N > n[K+1] );
-			PhongRodriguesVectorField< K , N , Modulate > operator[]( size_t k ) const { return _f[k]; }
-		protected:
-			PhongRodriguesVectorField< K , N , Modulate > _f[NumElements];
-		};
-
-#include "SimplexProcessing.elements.inl"
+			return SimplexProcessing::ArrayWrapper( [SF,F]( size_t sIdx ){ return SimplexProcessing::ScaledField< K >( SF[sIdx] , F[sIdx] ); } );
+		}
 	}
 }
-#endif // SIMPLEX_PROCESSING_ELEMENTS_INCLUDED
+#endif // SIMPLICIAL_MESH_PROCESSING_FUNCTIONS_INCLUDED

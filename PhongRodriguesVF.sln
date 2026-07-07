@@ -38,6 +38,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SimplicialMeshProcessing", 
 		Include\SimplicialMeshProcessing.embedded.inl = Include\SimplicialMeshProcessing.embedded.inl
 		Include\SimplicialMeshProcessing.fields.h = Include\SimplicialMeshProcessing.fields.h
 		Include\SimplicialMeshProcessing.fields.inl = Include\SimplicialMeshProcessing.fields.inl
+		Include\SimplicialMeshProcessing.functions.h = Include\SimplicialMeshProcessing.functions.h
 		Include\SimplicialMeshProcessing.h = Include\SimplicialMeshProcessing.h
 		Include\SimplicialMeshProcessing.integration.h = Include\SimplicialMeshProcessing.integration.h
 		Include\SimplicialMeshProcessing.integration.inl = Include\SimplicialMeshProcessing.integration.inl

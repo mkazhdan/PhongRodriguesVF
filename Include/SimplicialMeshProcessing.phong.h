@@ -91,11 +91,9 @@ namespace MishaK
 			auto              normalField( size_t sIdx ) const;
 
 			auto scalarElementIndex( void ) const;
-
 			auto vectorElementIndex( void ) const;
 
 			auto scalarElements( void ) const;
-
 			auto vectorElements( void ) const;
 
 			template< SimplexProcessing::HasFunction< std::pair< size_t , Point< double , K > > , size_t > SampleFunctor >

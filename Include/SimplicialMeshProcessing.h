@@ -36,6 +36,7 @@ DAMAGE.
 #include "SimplexProcessing.h"
 
 #include "SimplicialMeshProcessing.concepts.h"
+#include "SimplicialMeshProcessing.functions.h"
 #include "SimplicialMeshProcessing.integration.h"
 #include "SimplicialMeshProcessing.riemannian.h"
 #include "SimplicialMeshProcessing.embedded.h"

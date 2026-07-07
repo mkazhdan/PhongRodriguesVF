@@ -26,15 +26,29 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 DAMAGE.
 */
 
-template< unsigned int K , unsigned int NumF , typename T , HasSimplexFunction< K , T > Function , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexlinearMapFunction< K , T > BilinearForms >
-auto SystemVectorField( Function && F , TestFunctions && Fs , BilinearForms && B )
+///////////////////////
+// SystemVectorField //
+///////////////////////
+template< unsigned int K , unsigned int NumF , typename T , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexSystemVectorFunction< K , NumF , T > SystemVectors >
+auto SystemVectorField( TestFunctions && Fs , SystemVectors && S )
 {
-	return [F,Fs,B]( SimplexProcessing::Position< K > p )
+	return [_Fs=std::forward< TestFunctions >(Fs),_S=std::forward< SystemVectors >(S)]( SimplexProcessing::Position< K > p )
+		{
+			T fs[NumF];
+			for( unsigned int n=0 ; n<NumF ; n++ ) fs[n] = _Fs[n](p);
+			return _S(p)( fs );
+		};
+}
+
+template< unsigned int K , unsigned int NumF , typename T , HasSimplexFunction< K , T > Function , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexlinearMapFunction< K , T > LinearMaps >
+auto SystemVectorField( Function && F , TestFunctions && Fs , LinearMaps && L )
+{
+	return [_F=std::forward< Function>(F),_Fs=std::forward< TestFunctions >(Fs),_L=std::forward< LinearMaps >(L)]( SimplexProcessing::Position< K > p )
 		{
 			Point< double , NumF > v;
 
-			T f = B(p)( F(p) );
-			for( unsigned int n=0 ; n<NumF ; n++ ) v[n] = DotProduct( f , Fs[n](p) );
+			T f = _L(p)( _F(p) );
+			for( unsigned int n=0 ; n<NumF ; n++ ) v[n] = DotProduct( f , _Fs[n](p) );
 			return v;
 		};
 }
@@ -43,44 +57,47 @@ template< unsigned int K , unsigned int NumF , typename T , HasSimplexFunction< 
 	requires( !HasSimplexlinearMapFunction< BilinearForms , K , T > )
 auto SystemVectorField( Function && F , TestFunctions && Fs , BilinearForms && B )
 {
-	return [F,Fs,B]( SimplexProcessing::Position< K > p )
+	return [_F=std::forward< Function >(F),_Fs=std::forward< TestFunctions >(Fs),_B=std::forward< BilinearForms >(B)]( SimplexProcessing::Position< K > p )
 		{
 			Point< double , NumF > v;
 
-			T f = F(p);
-			const auto & b = B(p);
-			for( unsigned int n=0 ; n<NumF ; n++ ) v[n] = b( f , Fs[n](p) );
+			T f = _F(p);
+			const auto & b = _B(p);
+			for( unsigned int n=0 ; n<NumF ; n++ ) v[n] = b( f , _Fs[n](p) );
 			return v;
 		};
 }
 
-template< unsigned int K , unsigned int NumF , typename T , HasSimplexFunction< K , T > Function , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexSystemVectorFunction< K , NumF , T > BilinearForms >
-	requires( !HasSimplexlinearMapFunction< BilinearForms , K , T > && !HasSimplexBilinearFormFunction< BilinearForms , K , T > )
-auto SystemVectorField( Function && F , TestFunctions && Fs , BilinearForms && B )
+///////////////////////
+// SystemMatrixField //
+///////////////////////
+template< unsigned int K , unsigned int NumF , typename T , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexSystemMatrixFunction< K , NumF , T > SystemMatrices >
+	requires( !HasSimplexlinearMapFunction< SystemMatrices , K , T > && !HasSimplexBilinearFormFunction< SystemMatrices , K , T > )
+auto SystemMatrixField( TestFunctions && Fs , SystemMatrices && S )
 {
-	return [Fs,B]( SimplexProcessing::Position< K > p )
+	return [_Fs=std::forward< TestFunctions >(Fs),_S=std::forward< SystemMatrices >(S)]( SimplexProcessing::Position< K > p )
 		{
 			T fs[NumF];
-			for( unsigned int n=0 ; n<NumF ; n++ ) fs[n] = Fs[n](p);
-			return B(p)( fs );
+			for( unsigned int n=0 ; n<NumF ; n++ ) fs[n] = _Fs[n](p);
+			return _S(p)( fs );
 		};
 }
 
-template< unsigned int K , unsigned int NumF , typename T , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexlinearMapFunction< K , T > BilinearForms >
-auto SystemMatrixField( TestFunctions && Fs , BilinearForms && B )
+template< unsigned int K , unsigned int NumF , typename T , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexlinearMapFunction< K , T > LinearMaps >
+auto SystemMatrixField( TestFunctions && Fs , LinearMaps && L )
 {
-	return [Fs,B]( SimplexProcessing::Position< K > p )
+	return [_Fs=std::forward< TestFunctions >(Fs),_L=std::forward< LinearMaps >(L)]( SimplexProcessing::Position< K > p )
 		{
 			SquareMatrix< double , NumF > m;
-			T fs[NumF] , bfs[NumF];
+			T fs[NumF] , lfs[NumF];
 
-			const auto & b = B(p);
+			const auto & l = _L(p);
 			for( unsigned int n=0 ; n<NumF ; n++ )
 			{
-				fs[n] = Fs[n](p);
-				bfs[n] = b( fs[n] );
+				fs[n] = _Fs[n](p);
+				lfs[n] = l( fs[n] );
 			}
-			for( unsigned int n1=0 ; n1<NumF ; n1++ ) for( unsigned int n2=0 ; n2<NumF; n2++ ) m(n1,n2) = DotProduct( fs[n1] , bfs[n2] );
+			for( unsigned int n1=0 ; n1<NumF ; n1++ ) for( unsigned int n2=0 ; n2<NumF; n2++ ) m(n1,n2) = DotProduct( fs[n1] , lfs[n2] );
 			return m;
 		};
 }
@@ -89,48 +106,16 @@ template< unsigned int K , unsigned int NumF , typename T , HasArrayOfSimplexFun
 	requires( !HasSimplexlinearMapFunction< BilinearForms , K , T > )
 auto SystemMatrixField( TestFunctions && Fs , BilinearForms && B )
 {
-	return [Fs,B]( SimplexProcessing::Position< K > p )
+	return [_Fs=std::forward< TestFunctions >(Fs),_B=std::forward< BilinearForms >(B)]( SimplexProcessing::Position< K > p )
 		{
 			SquareMatrix< double , NumF > m;
 			T fs[NumF];
 
-			const auto & b = B(p);
-			for( unsigned int n=0 ; n<NumF ; n++ ) fs[n] = Fs[n](p);
+			const auto & b = _B(p);
+			for( unsigned int n=0 ; n<NumF ; n++ ) fs[n] = _Fs[n](p);
 			for( unsigned int n1=0 ; n1<NumF ; n1++ ) for( unsigned int n2=0 ; n2<NumF; n2++ ) m(n1,n2) = b( fs[n1] , fs[n2] );
 			return m;
 		};
-}
-
-template< unsigned int K , unsigned int NumF , typename T , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexSystemMatrixFunction< K , NumF , T > BilinearForms >
-	requires( !HasSimplexlinearMapFunction< BilinearForms , K , T > && !HasSimplexBilinearFormFunction< BilinearForms , K , T > )
-auto SystemMatrixField( TestFunctions && Fs , BilinearForms && B )
-{
-	return [Fs,B]( SimplexProcessing::Position< K > p )
-		{
-			T fs[NumF];
-			for( unsigned int n=0 ; n<NumF ; n++ ) fs[n] = Fs[n](p);
-			return B(p)( fs );
-		};
-}
-
-template< unsigned int K , unsigned int NumF , typename T , HasSimplexFunction< K , ScaleFactor > ScaleFactors , HasSimplexFunction< K , T > Function , HasArrayOfSimplexFunctions< K , T > TestFunctions , typename BilinearForms /* = Field< K , BilinearForm< T > */ >
-auto ScaledSystemVectorField( ScaleFactors && SF , Function && F , TestFunctions && Fs , BilinearForms && B )
-{
-	auto VF = SystemVectorField< K , NumF , T >( std::forward< Function >( F ) , std::forward< TestFunctions >( Fs ) , std::forward< BilinearForms >( B ) );
-	return [VF,SF]( SimplexProcessing::Position< K > p ){ return VF(p) * SF(p); };
-}
-
-template< unsigned int K , unsigned int NumF , typename T , HasSimplexFunction< K , ScaleFactor > ScaleFactors , HasArrayOfSimplexFunctions< K , T > TestFunctions , typename BilinearForms /* = Field< K , BilinearForm< T > */ >
-auto ScaledSystemMatrixField( ScaleFactors && SF , TestFunctions && Fs , BilinearForms && B )
-{
-	auto MF = SystemMatrixField< K , NumF , T >( std::forward< TestFunctions >( Fs ) , std::forward< BilinearForms >( B ) );
-	return [MF,SF]( SimplexProcessing::Position< K > p ){ return MF(p) * SF(p); };
-}
-
-template< unsigned int K , unsigned int NumF , typename T , HasSimplexFunction< K , ScaleFactor > ScaleFactors , HasSimplexFunction< K , T > Field >
-auto ScaledField( ScaleFactors && SF , Field && F )
-{
-	return [SF,F]( SimplexProcessing::Position< K > p ){ return SF(p) * F(p); };
 }
 
 //////////////////

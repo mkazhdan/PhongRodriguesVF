@@ -42,6 +42,12 @@ namespace MishaK
 		template< typename Array , typename T >
 		concept HasArray = requires( const Array array , size_t idx ) { { array[idx] } -> std::same_as< T >; };
 
+		template< typename Function , typename ... Args >
+		concept HasInvocable = std::invocable< Function , Args... >;
+
+		template< typename Function , unsigned int K >
+		concept HasSimplexInvocable = HasInvocable< Function , Position< K > >;
+
 		template< typename Function , typename RetValue , typename ... Args >
 		concept HasFunction = requires( const Function f , Args ... args ) { { f(args...) } -> std::same_as< RetValue >; };
 
@@ -49,10 +55,16 @@ namespace MishaK
 		concept HasSimplexFunction = HasFunction< Field , T , Position< K > >;
 
 		template< typename Field , unsigned int K , typename T >
+		concept HasSimplexScaleFactorFunction = HasSimplexFunction< Field , K , ScaleFactor >;
+
+		template< typename Field , unsigned int K , typename T >
 		concept HasSimplexFunctionDifferential = requires( const Field f , Position< K > p ) { { f.d(p) } -> std::same_as< SimplexProcessing::Differential< K , T > >; };
 
 		template< typename Field , unsigned int K , typename T >
 		concept HasSimplexFunctionAndFunctionDifferential = HasSimplexFunction< Field , K ,T > && HasSimplexFunctionDifferential< Field , K , T >;
+
+		template< typename Field , unsigned int K >
+		concept HasArrayOfSimplexInvocables = requires( const Field f , size_t idx , Position< K > p ) { { f[idx](p) }; };
 
 		template< typename Field , unsigned int K , typename T >
 		concept HasArrayOfSimplexFunctions = requires( const Field f , size_t idx , Position< K > p ) { { f[idx](p) } -> std::same_as< T >; };

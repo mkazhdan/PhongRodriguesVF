@@ -34,6 +34,9 @@ namespace MishaK
 {
 	namespace SimplicialMesh
 	{
+		template< typename Field , unsigned int K >
+		concept HasMeshInvocable = SimplexProcessing::HasArrayOfSimplexInvocables< Field , K >;
+
 		template< typename Field , unsigned int K , typename T >
 		concept HasMeshFunction = SimplexProcessing::HasArrayOfSimplexFunctions< Field , K , T >;
 
