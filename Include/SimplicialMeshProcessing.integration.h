@@ -53,7 +53,7 @@ namespace MishaK
 				EigenMatrixEntries( EigenMatrixEntries && e ){ std::swap(_M,e._M) , std::swap( _matrixEntries , e._matrixEntries ); }
 				EigenMatrixEntries & operator = ( EigenMatrixEntries && e ){ std::swap(_M,e._M) , std::swap( _matrixEntries , e._matrixEntries ) ; return *this; }
 
-				template< HasIndexFunctor Index >
+				template< HasElementIndexFunctor Index >
 				EigenMatrixEntries( size_t numF , size_t numS , Index && Idx );
 
 				void clear( void );
@@ -77,11 +77,11 @@ namespace MishaK
 				static T Integral( size_t numS , Function && F );
 
 				// The integral of one function against a set of test functions over the simplex
-				template< unsigned int NumElementsPerSimplex , HasIndexFunctor Index , HasMeshFunction< K , Point< double , NumElementsPerSimplex > > VectorFunctor >
+				template< unsigned int NumElementsPerSimplex , HasElementIndexFunctor Index , HasMeshFunction< K , Point< double , NumElementsPerSimplex > > VectorFunctor >
 				static Eigen::VectorXd Vector( size_t numF , size_t numS , Index && Idx , VectorFunctor && VF );
 
 				// The integral of a set of test functions against each other over the simplex
-				template< unsigned int NumElementsPerSimplex , HasIndexFunctor Index , HasMeshFunction< K , SquareMatrix< double , NumElementsPerSimplex > > MatrixFunctor >
+				template< unsigned int NumElementsPerSimplex , HasElementIndexFunctor Index , HasMeshFunction< K , SquareMatrix< double , NumElementsPerSimplex > > MatrixFunctor >
 				static Eigen::SparseMatrix< double > Matrix( size_t numF , size_t numS , Index && Idx , MatrixFunctor && MF );
 
 				// The integral of a set of test functions against each other over the simplex
@@ -97,10 +97,10 @@ namespace MishaK
 				template< typename T , SimplexProcessing::HasArray< T > Integrand >
 				static T Integral( size_t numS , Integrand && integrand );
 
-				template< unsigned int NumElementsPerSimplex , HasIndexFunctor Index , SimplexProcessing::HasArray< Point< double , NumElementsPerSimplex > > VectorFunctor >
+				template< unsigned int NumElementsPerSimplex , HasElementIndexFunctor Index , SimplexProcessing::HasArray< Point< double , NumElementsPerSimplex > > VectorFunctor >
 				static Eigen::VectorXd Vector( size_t numF , size_t numS , Index && Idx , VectorFunctor && VF );
 
-				template< unsigned int NumElementsPerSimplex , HasIndexFunctor Index , SimplexProcessing::HasArray< SquareMatrix< double , NumElementsPerSimplex > > MatrixFunctor >
+				template< unsigned int NumElementsPerSimplex , HasElementIndexFunctor Index , SimplexProcessing::HasArray< SquareMatrix< double , NumElementsPerSimplex > > MatrixFunctor >
 				static Eigen::SparseMatrix< double > Matrix( size_t numF , size_t numS , Index && Idx , MatrixFunctor && MF );
 
 				template< unsigned int NumElementsPerSimplex , SimplexProcessing::HasArray< SquareMatrix< double , NumElementsPerSimplex > > MatrixFunctor >

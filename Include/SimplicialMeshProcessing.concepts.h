@@ -68,10 +68,19 @@ namespace MishaK
 		concept HasMeshDSystemFunction = SimplexProcessing::HasArrayOfSimplexSystemMatrixFunctions< Field , K , N , SimplexProcessing::Differential< K , T > >;
 
 		template< typename Field , unsigned int K , unsigned int N , typename T >
-		concept HasMeshSystemAndDSystemFunction = SimplexProcessing::HasArrayOfSimplexSystemMatrixFunctions< Field , K , N , std::pair< T , SimplexProcessing::Differential< K , T > > >;
+		concept HasMeshSystemAndDSystemFunction = SimplexProcessing::HasArrayOfSimplexSystemMatrixFunctions< Field , K , N , SimplexProcessing::ValueAndDifferential< K , T > >;
 
 		template< typename IndexFunctor >
-		concept HasIndexFunctor = requires( const IndexFunctor f , size_t sIdx , unsigned int eIdx ) { { f(sIdx,eIdx) } -> std::convertible_to< size_t >; };
+		concept HasElementIndexFunctor = requires( const IndexFunctor f , size_t sIdx , unsigned int eIdx ) { { f(sIdx,eIdx) } -> std::convertible_to< size_t >; };
+
+		template< typename Elements , unsigned int K , typename T >
+		concept HasElements = requires( const Elements elems , size_t sIdx , unsigned int eIdx , SimplexProcessing::Position< K > p ) { { elems[sIdx][eIdx](p) } -> std::same_as< T >; };
+
+		template< typename Elements , unsigned int K , typename T >
+		concept HasDifferentiableElements = requires( const Elements elems , size_t sIdx , unsigned int eIdx , SimplexProcessing::Position< K > p ) { { elems[sIdx][eIdx].d(p) } -> std::same_as< SimplexProcessing::Differential< K , T > >; };
+
+		template< typename Elements , unsigned int K , typename T >
+		concept HasElementsAndDifferentiableElements = HasElements< Elements , K , T > && HasDifferentiableElements< Elements , K , T >;
 	}
 }
 #endif // SIMPLICIAL_MESH_PROCESSING_CONCEPTS_INCLUDED

@@ -354,13 +354,13 @@ Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::bracketEnergy( TangentVect
 	{
 		return [tE2I=SimplexProcessing::PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >(simplexVertices(sIdx),simplexNormals(sIdx)),tN=this->normalField(sIdx),tG=this->metricTensorField(sIdx),tGInv=this->inverseMetricTensorField(sIdx),tV=V[sIdx]]( SimplexProcessing::Position< K > p )
 		{
-			return [e2i=tE2I(p),n=tN(p),gInv=tGInv(p),v=tV(p),dv=tV.d(p)]( const std::pair< Vector , SimplexProcessing::Differential< K , Vector > > d[] )
+			return [e2i=tE2I(p),n=tN(p),gInv=tGInv(p),v=tV(p),dv=tV.d(p)]( const SimplexProcessing::ValueAndDifferential< K , Vector > d[] )
 			{
 				Point< double , K > _x = e2i * v;
 				Point< double , K+1 > _z[ NumE ];
 				for( unsigned int e=0 ; e<NumE ; e++ )
 				{
-					_z[e] = d[e].second( _x ) - dv( e2i * d[e].first );
+					_z[e] = d[e].template get<1>()( _x ) - dv( e2i * d[e].template get<0>() );
 					_z[e] -= n * Point< double , K+1 >::Dot( _z[e] , n );
 				}
 

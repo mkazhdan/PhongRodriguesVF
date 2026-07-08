@@ -39,6 +39,7 @@ namespace MishaK
 
 		template< unsigned int K >                    using Position = Point< double , K >;
 		template< unsigned int K , typename T >       using Differential = Point< T , K , double >;
+		template< unsigned int K , typename T >       using ValueAndDifferential = VectorTypeUnion< double , T , Differential< K , T > >;
 		template< unsigned int K >                    using MetricTensor = SquareMatrix< double , K >;
 		template< unsigned int K , unsigned int Dim > using EmbeddedSimplex = Simplex< double , Dim , K >;
 		template< unsigned int K >

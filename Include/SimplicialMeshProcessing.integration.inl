@@ -59,7 +59,7 @@ T MCIntegrator< K , QuadratureSamples >::Integral( size_t numS , Function && F )
 }
 
 template< unsigned int K , unsigned int QuadratureSamples >
-template< unsigned int NumElementsPerSimplex , HasIndexFunctor Index , HasMeshFunction< K , Point< double , NumElementsPerSimplex > > VectorFunctor >
+template< unsigned int NumElementsPerSimplex , HasElementIndexFunctor Index , HasMeshFunction< K , Point< double , NumElementsPerSimplex > > VectorFunctor >
 Eigen::VectorXd MCIntegrator< K , QuadratureSamples >::Vector( size_t numF , size_t numS , Index && Idx , VectorFunctor && VF )
 {
 	return SystemAssembler::Vector< NumElementsPerSimplex >
@@ -72,7 +72,7 @@ Eigen::VectorXd MCIntegrator< K , QuadratureSamples >::Vector( size_t numF , siz
 }
 
 template< unsigned int K , unsigned int QuadratureSamples >
-template< unsigned int NumElementsPerSimplex , HasIndexFunctor Index , HasMeshFunction< K , SquareMatrix< double , NumElementsPerSimplex > > MatrixFunctor >
+template< unsigned int NumElementsPerSimplex , HasElementIndexFunctor Index , HasMeshFunction< K , SquareMatrix< double , NumElementsPerSimplex > > MatrixFunctor >
 Eigen::SparseMatrix< double > MCIntegrator< K , QuadratureSamples >::Matrix( size_t numF , size_t numS , Index && Idx , MatrixFunctor && MF )
 {
 	return SystemAssembler::Matrix< NumElementsPerSimplex >
@@ -110,7 +110,7 @@ T SystemAssembler::Integral( size_t numS , Integrand && integrand )
 	return I;
 }
 
-template< unsigned int NumElementsPerSimplex , HasIndexFunctor Index , SimplexProcessing::HasArray< Point< double , NumElementsPerSimplex > > VectorFunctor >
+template< unsigned int NumElementsPerSimplex , HasElementIndexFunctor Index , SimplexProcessing::HasArray< Point< double , NumElementsPerSimplex > > VectorFunctor >
 Eigen::VectorXd SystemAssembler::Vector( size_t numF , size_t numS , Index && Idx , VectorFunctor && VF )
 {
 	std::vector< double > dEntries( numS * NumElementsPerSimplex );
@@ -132,7 +132,7 @@ Eigen::VectorXd SystemAssembler::Vector( size_t numF , size_t numS , Index && Id
 	return D;
 }
 
-template< unsigned int NumElementsPerSimplex , HasIndexFunctor Index , SimplexProcessing::HasArray< SquareMatrix< double , NumElementsPerSimplex > > MatrixFunctor >
+template< unsigned int NumElementsPerSimplex , HasElementIndexFunctor Index , SimplexProcessing::HasArray< SquareMatrix< double , NumElementsPerSimplex > > MatrixFunctor >
 Eigen::SparseMatrix< double > SystemAssembler::Matrix( size_t numF , size_t numS , Index && Idx , MatrixFunctor && MF )
 {
 	std::vector< Eigen::Triplet< double > > triplets( numS * NumElementsPerSimplex * NumElementsPerSimplex );
@@ -175,7 +175,7 @@ void SystemAssembler::SetMatrixEntries( EigenMatrixEntries< NumElementsPerSimple
 // EigenMatrixEntries //
 ////////////////////////
 template< unsigned int NumElementsPerSimplex >
-template< HasIndexFunctor Index >
+template< HasElementIndexFunctor Index >
 EigenMatrixEntries< NumElementsPerSimplex >::EigenMatrixEntries( size_t numF , size_t numS , Index && Idx ) :
 	_M( new Eigen::SparseMatrix< double >( numF , numF ) ) , _matrixEntries( numS * NumElementsPerSimplex * NumElementsPerSimplex )
 {
