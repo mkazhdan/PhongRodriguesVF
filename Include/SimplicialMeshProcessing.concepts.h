@@ -40,6 +40,12 @@ namespace MishaK
 		template< typename Field , unsigned int K , typename T >
 		concept HasMeshFunction = SimplexProcessing::HasArrayOfSimplexFunctions< Field , K , T >;
 
+		template< typename Field , unsigned int K , typename T >
+		concept HasMeshDifferentialFunction = SimplexProcessing::HasArrayOfSimplexFunctions< Field , K , SimplexProcessing::Differential< K , T > >;
+
+		template< typename Field , unsigned int K , typename T >
+		concept HasMeshFunctionOrDifferentialFunction = HasMeshFunction< Field , K , T > || HasMeshDifferentialFunction< Field , K , T >;
+
 		template< typename Field , unsigned int K >
 		concept HasMeshScaleFactorFunction = HasMeshFunction< Field , K , SimplexProcessing::ScaleFactor >;
 

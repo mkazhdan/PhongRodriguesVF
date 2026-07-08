@@ -139,17 +139,17 @@ Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::evaluation( size_t sampleN
 }
 
 template< unsigned int K >
-template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField , HasMeshScaleFactorFunction< K > WeightField >
-Eigen::VectorXd EmbeddedPhongMesh< K >::weightedDual( ScalarOrDifferentialField && F , WeightField && WF ) const
+template< unsigned int QuadratureSamples , HasMeshFunctionOrDifferentialFunction< K , typename EmbeddedPhongMesh< K >::Vector > VectorOrVectorDifferentialField >
+Eigen::VectorXd EmbeddedPhongMesh< K >::dual( VectorOrVectorDifferentialField && F ) const
 {
-	return this->template _weightedDual< QuadratureSamples , (K+1)*Dim , Vector >( _vertices.size()*Dim , elements() , std::forward< ScalarOrDifferentialField >( F ) , elementIndex() , std::forward< WeightField >( WF ) );
+	return this->template _dual< QuadratureSamples , (K+1)*Dim , Vector >( _vertices.size()*Dim , elements() , std::forward< VectorOrVectorDifferentialField >( F ) , elementIndex() );
 }
 
 template< unsigned int K >
-template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField >
-Eigen::VectorXd EmbeddedPhongMesh< K >::dual( ScalarOrDifferentialField && F ) const
+template< unsigned int QuadratureSamples , HasMeshFunctionOrDifferentialFunction< K , typename EmbeddedPhongMesh< K >::Vector > VectorOrVectorDifferentialField , HasMeshScaleFactorFunction< K > WeightField >
+Eigen::VectorXd EmbeddedPhongMesh< K >::weightedDual( VectorOrVectorDifferentialField && F , WeightField && WF ) const
 {
-	return this->template _dual< QuadratureSamples , (K+1)*Dim , Vector >( _vertices.size()*Dim , elements() , std::forward< ScalarOrDifferentialField >( F ) , elementIndex() );
+	return this->template _weightedDual< QuadratureSamples , (K+1)*Dim , Vector >( _vertices.size()*Dim , elements() , std::forward< VectorOrVectorDifferentialField >( F ) , elementIndex() , std::forward< WeightField >( WF ) );
 }
 
 template< unsigned int K >

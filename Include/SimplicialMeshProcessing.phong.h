@@ -97,8 +97,8 @@ namespace MishaK
 			Eigen::SparseMatrix< double > evaluation( size_t sampleNum , SampleFunctor && sampleFunctor ) const;
 
 
-			template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField >
-			Eigen::VectorXd dual( ScalarOrDifferentialField && F ) const;
+			template< unsigned int QuadratureSamples , HasMeshFunctionOrDifferentialFunction< K , typename EmbeddedPhongMesh< K >::Vector > VectorOrVectorDifferentialField >
+			Eigen::VectorXd dual( VectorOrVectorDifferentialField && F ) const;
 
 			template< unsigned int QuadratureSamples >
 			Eigen::SparseMatrix< double > mass( void ) const;
@@ -109,8 +109,8 @@ namespace MishaK
 			template< unsigned int QuadratureSamples , CovariantComponent CComponent >
 			Eigen::SparseMatrix< double > stiffness( void ) const;
 
-			template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField , HasMeshScaleFactorFunction< K > WeightField >
-			Eigen::VectorXd weightedDual( ScalarOrDifferentialField && F , WeightField && WF ) const;
+			template< unsigned int QuadratureSamples , HasMeshFunctionOrDifferentialFunction< K , typename EmbeddedPhongMesh< K >::Vector > VectorOrVectorDifferentialField , HasMeshScaleFactorFunction< K > WeightField >
+			Eigen::VectorXd weightedDual( VectorOrVectorDifferentialField && F , WeightField && WF ) const;
 
 			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField >
 			Eigen::SparseMatrix< double > weightedMass( WeightField && WF ) const;

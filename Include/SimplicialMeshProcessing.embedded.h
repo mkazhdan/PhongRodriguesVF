@@ -76,9 +76,8 @@ namespace MishaK
 			template< SimplexProcessing::HasFunction< std::pair< size_t , Point< double , Dim > > , size_t > SampleFunctor >
 			Eigen::SparseMatrix< double > evaluation( size_t sampleNum , SampleFunctor && sampleFunctor ) const;
 
-			template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField >
-			Eigen::VectorXd dual( ScalarOrDifferentialField && F ) const
-				requires SimplexProcessing::HasArrayOfSimplexFunctions< ScalarOrDifferentialField , K , Scalar > || SimplexProcessing::HasArrayOfSimplexFunctions< ScalarOrDifferentialField , K , SimplexProcessing::Differential< K , Scalar > >;
+			template< unsigned int QuadratureSamples , HasMeshFunctionOrDifferentialFunction< K , typename EmbeddedMesh< K , Dim >::Scalar > ScalarOrScalarDifferentialField >
+			Eigen::VectorXd dual( ScalarOrScalarDifferentialField && F ) const;
 
 			template< unsigned int QuadratureSamples >
 			Eigen::SparseMatrix< double > mass( void ) const;
@@ -86,8 +85,8 @@ namespace MishaK
 			template< unsigned int QuadratureSamples >
 			Eigen::SparseMatrix< double > stiffness( void ) const;
 
-			template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField , HasMeshScaleFactorFunction< K > WeightField >
-			Eigen::VectorXd weightedDual( ScalarOrDifferentialField && F , WeightField && WF ) const;
+			template< unsigned int QuadratureSamples , HasMeshFunctionOrDifferentialFunction< K , typename EmbeddedMesh< K , Dim >::Scalar > ScalarOrScalarDifferentialField , HasMeshScaleFactorFunction< K > WeightField >
+			Eigen::VectorXd weightedDual( ScalarOrScalarDifferentialField && F , WeightField && WF ) const;
 
 			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField >
 			Eigen::SparseMatrix< double > weightedMass( WeightField && WF ) const;

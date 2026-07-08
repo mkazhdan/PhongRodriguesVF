@@ -110,18 +110,17 @@ Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::evaluation( size_t sample
 }
 
 template< unsigned int K , unsigned int Dim >
-template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField , HasMeshScaleFactorFunction< K > WeightField >
-Eigen::VectorXd EmbeddedMesh< K , Dim >::weightedDual( ScalarOrDifferentialField && F , WeightField && WF ) const
+template< unsigned int QuadratureSamples , HasMeshFunctionOrDifferentialFunction< K , typename EmbeddedMesh< K , Dim >::Scalar > ScalarOrScalarDifferentialField >
+Eigen::VectorXd EmbeddedMesh< K , Dim >::dual( ScalarOrScalarDifferentialField && F ) const
 {
-	return this->template _weightedDual< QuadratureSamples , K+1 , Scalar >( _vertices.size() , elements() , std::forward< ScalarOrDifferentialField >( F ) , elementIndex() , std::forward< WeightField >( WF ) );
+	return this->template _dual< QuadratureSamples , K+1 , Scalar >( _vertices.size() , elements() , std::forward< ScalarOrScalarDifferentialField >( F ) , elementIndex() );
 }
 
 template< unsigned int K , unsigned int Dim >
-template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField >
-Eigen::VectorXd EmbeddedMesh< K , Dim >::dual( ScalarOrDifferentialField && F ) const
-	requires SimplexProcessing::HasArrayOfSimplexFunctions< ScalarOrDifferentialField , K , Scalar > || SimplexProcessing::HasArrayOfSimplexFunctions< ScalarOrDifferentialField , K , SimplexProcessing::Differential< K , Scalar > >
+template< unsigned int QuadratureSamples , HasMeshFunctionOrDifferentialFunction< K , typename EmbeddedMesh< K , Dim >::Scalar > ScalarOrScalarDifferentialField , HasMeshScaleFactorFunction< K > WeightField >
+Eigen::VectorXd EmbeddedMesh< K , Dim >::weightedDual( ScalarOrScalarDifferentialField && F , WeightField && WF ) const
 {
-	return this->template _dual< QuadratureSamples , K+1 , Scalar >( _vertices.size() , elements() , std::forward< ScalarOrDifferentialField >( F ) , elementIndex() );
+	return this->template _weightedDual< QuadratureSamples , K+1 , Scalar >( _vertices.size() , elements() , std::forward< ScalarOrScalarDifferentialField >( F ) , elementIndex() , std::forward< WeightField >( WF ) );
 }
 
 template< unsigned int K , unsigned int Dim >
