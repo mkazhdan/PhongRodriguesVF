@@ -76,9 +76,6 @@ namespace MishaK
 			template< SimplexProcessing::HasFunction< std::pair< size_t , Point< double , Dim > > , size_t > SampleFunctor >
 			Eigen::SparseMatrix< double > evaluation( size_t sampleNum , SampleFunctor && sampleFunctor ) const;
 
-			template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::VectorXd dual( ScalarOrDifferentialField && F , ScaleFactorField && S ) const;
-
 			template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField >
 			Eigen::VectorXd dual( ScalarOrDifferentialField && F ) const
 				requires SimplexProcessing::HasArrayOfSimplexFunctions< ScalarOrDifferentialField , K , Scalar > || SimplexProcessing::HasArrayOfSimplexFunctions< ScalarOrDifferentialField , K , SimplexProcessing::Differential< K , Scalar > >;
@@ -86,14 +83,17 @@ namespace MishaK
 			template< unsigned int QuadratureSamples >
 			Eigen::SparseMatrix< double > mass( void ) const;
 
-			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::SparseMatrix< double > mass( ScaleFactorField && S ) const;
-
 			template< unsigned int QuadratureSamples >
 			Eigen::SparseMatrix< double > stiffness( void ) const;
 
-			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::SparseMatrix< double > stiffness( ScaleFactorField && S ) const;
+			template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField , HasMeshScaleFactorFunction< K > WeightField >
+			Eigen::VectorXd weightedDual( ScalarOrDifferentialField && F , WeightField && WF ) const;
+
+			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField >
+			Eigen::SparseMatrix< double > weightedMass( WeightField && WF ) const;
+
+			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField >
+			Eigen::SparseMatrix< double > weightedStiffness( WeightField && WF ) const;
 
 			template< unsigned int QuadratureSamples , HasMeshTangentVectorFunction< K > TangentVectorField >
 			Eigen::SparseMatrix< double > derivationSystem( TangentVectorField && VF ) const;

@@ -97,32 +97,29 @@ namespace MishaK
 			Eigen::SparseMatrix< double > evaluation( size_t sampleNum , SampleFunctor && sampleFunctor ) const;
 
 
-			template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::VectorXd dual( ScalarOrDifferentialField && F , ScaleFactorField && S ) const;
-
 			template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField >
 			Eigen::VectorXd dual( ScalarOrDifferentialField && F ) const;
-
-			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::SparseMatrix< double > mass( ScaleFactorField && S ) const;
 
 			template< unsigned int QuadratureSamples >
 			Eigen::SparseMatrix< double > mass( void ) const;
 
-			template< unsigned int QuadratureSamples , typename SystemField >
-			Eigen::SparseMatrix< double > system( SystemField && Sys , bool needsScaling=true ) const;
-
 			template< unsigned int QuadratureSamples >
 			Eigen::SparseMatrix< double > stiffness( void ) const;
-
-			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::SparseMatrix< double > stiffness( ScaleFactorField && SF ) const;
 
 			template< unsigned int QuadratureSamples , CovariantComponent CComponent >
 			Eigen::SparseMatrix< double > stiffness( void ) const;
 
-			template< unsigned int QuadratureSamples , CovariantComponent CComponent , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::SparseMatrix< double > stiffness( ScaleFactorField && SF ) const;
+			template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField , HasMeshScaleFactorFunction< K > WeightField >
+			Eigen::VectorXd weightedDual( ScalarOrDifferentialField && F , WeightField && WF ) const;
+
+			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField >
+			Eigen::SparseMatrix< double > weightedMass( WeightField && WF ) const;
+
+			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField >
+			Eigen::SparseMatrix< double > weightedStiffness( WeightField && WF ) const;
+
+			template< unsigned int QuadratureSamples , CovariantComponent CComponent , HasMeshScaleFactorFunction< K > WeightField >
+			Eigen::SparseMatrix< double > weightedStiffness( WeightField && WF ) const;
 
 			// Gives the squared-norm of the bracket with v
 			template< unsigned int QuadratureSamples , typename TangentVectorField >
@@ -132,14 +129,15 @@ namespace MishaK
 			template< unsigned int QuadratureSamples , typename TangentVectorField >
 			Eigen::SparseMatrix< double > dotProductEnergy( TangentVectorField && V ) const;
 
+			template< unsigned int QuadratureSamples , typename SystemField >
+			Eigen::SparseMatrix< double > system( SystemField && Sys , bool needsScaling=true ) const;
+
 			EigenMatrixEntries eigenMatrixEntries( void ) const { return this->template _eigenMatrixEntries< (K+1)*Dim >( _vertices.size()*Dim , elementIndex() ); }
 
 			template< unsigned int QuadratureSamples , typename SystemField >
 			void setSystemEntries( EigenMatrixEntries & eme , SystemField && Sys ) const;
 
 			Eigen::SparseMatrix< double > J( void ) const requires( K==2 );
-
-			Eigen::SparseMatrix< double > rotation( double radians ) const requires( K==2 );
 
 			Eigen::SparseMatrix< double > tangentProlongation( void ) const;
 

@@ -110,10 +110,10 @@ Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::evaluation( size_t sample
 }
 
 template< unsigned int K , unsigned int Dim >
-template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField , HasMeshScaleFactorFunction< K > ScaleFactorField >
-Eigen::VectorXd EmbeddedMesh< K , Dim >::dual( ScalarOrDifferentialField && F , ScaleFactorField && S ) const
+template< unsigned int QuadratureSamples , typename ScalarOrDifferentialField , HasMeshScaleFactorFunction< K > WeightField >
+Eigen::VectorXd EmbeddedMesh< K , Dim >::weightedDual( ScalarOrDifferentialField && F , WeightField && WF ) const
 {
-	return this->template _dual< QuadratureSamples , K+1 , Scalar >( _vertices.size() , elements() , std::forward< ScalarOrDifferentialField >( F ) , elementIndex() , std::forward< ScaleFactorField >( S ) );
+	return this->template _weightedDual< QuadratureSamples , K+1 , Scalar >( _vertices.size() , elements() , std::forward< ScalarOrDifferentialField >( F ) , elementIndex() , std::forward< WeightField >( WF ) );
 }
 
 template< unsigned int K , unsigned int Dim >
@@ -132,10 +132,10 @@ Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::mass( void ) const
 }
 
 template< unsigned int K , unsigned int Dim >
-template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > ScaleFactorField >
-Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::mass( ScaleFactorField && S ) const
+template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField >
+Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::weightedMass( WeightField && WF ) const
 {
-	return this->template _mass< QuadratureSamples , K+1 , Scalar >( _vertices.size() , elements() , elementIndex() , std::forward< ScaleFactorField >( S ) );
+	return this->template _weightedMass< QuadratureSamples , K+1 , Scalar >( _vertices.size() , elements() , elementIndex() , std::forward< WeightField >( WF ) );
 }
 
 template< unsigned int K , unsigned int Dim >
@@ -146,10 +146,10 @@ Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::stiffness( void ) const
 }
 
 template< unsigned int K , unsigned int Dim >
-template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > ScaleFactorField >
-Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::stiffness( ScaleFactorField && S ) const
+template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField >
+Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::weightedStiffness( WeightField && WF ) const
 {
-	return this->template _stiffness< QuadratureSamples , K+1 , Scalar >( _vertices.size() , elements() , elementIndex() , std::forward< ScaleFactorField >( S ) );
+	return this->template _weightedStiffness< QuadratureSamples , K+1 , Scalar >( _vertices.size() , elements() , elementIndex() , std::forward< WeightField >( WF ) );
 }
 
 template< unsigned int K , unsigned int Dim >

@@ -93,12 +93,6 @@ namespace MishaK
 			template< typename Elements > static auto _DifferentialElements( Elements && E );
 			template< typename Elements > static auto _ValueAndDifferentialElements( Elements && E );
 
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasMeshFunction< K , T > ValueField , typename Elements , typename ElementIndex , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::VectorXd _dual( size_t fNum , Elements && E , ValueField && F , ElementIndex && Idx , ScaleFactorField && S ) const;
-
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasMeshFunction< K , SimplexProcessing::Differential< K , T > > DifferentialField , typename Elements , typename ElementIndex , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::VectorXd _dual( size_t fNum , Elements && E , DifferentialField && F , ElementIndex && Idx , ScaleFactorField && S ) const;
-
 			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasMeshFunction< K , T > ValueField , typename Elements , typename ElementIndex >
 			Eigen::VectorXd _dual( size_t fNum , Elements && E , ValueField && F , ElementIndex && Idx ) const;
 
@@ -108,14 +102,22 @@ namespace MishaK
 			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , typename ElementIndex >
 			Eigen::SparseMatrix< double > _mass( size_t fNum , Elements && E , ElementIndex && Idx ) const;
 
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , typename ElementIndex , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::SparseMatrix< double > _mass( size_t fNum , Elements && E , ElementIndex && Idx , ScaleFactorField && S ) const;
-
 			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , typename ElementIndex >
 			Eigen::SparseMatrix< double > _stiffness( size_t fNum , Elements && E , ElementIndex && Idx ) const;
 
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , typename ElementIndex , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			Eigen::SparseMatrix< double > _stiffness( size_t fNum , Elements && E , ElementIndex && Idx , ScaleFactorField && S ) const;
+
+			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasMeshFunction< K , T > ValueField , typename Elements , typename ElementIndex , HasMeshScaleFactorFunction< K > WeightField >
+			Eigen::VectorXd _weightedDual( size_t fNum , Elements && E , ValueField && F , ElementIndex && Idx , WeightField && WF ) const;
+
+			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasMeshFunction< K , SimplexProcessing::Differential< K , T > > DifferentialField , typename Elements , typename ElementIndex , HasMeshScaleFactorFunction< K > WeightField >
+			Eigen::VectorXd _weightedDual( size_t fNum , Elements && E , DifferentialField && F , ElementIndex && Idx , WeightField && WF ) const;
+
+			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , typename ElementIndex , HasMeshScaleFactorFunction< K > WeightField >
+			Eigen::SparseMatrix< double > _weightedMass( size_t fNum , Elements && E , ElementIndex && Idx , WeightField && WF ) const;
+
+			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , typename ElementIndex , HasMeshScaleFactorFunction< K > WeightField >
+			Eigen::SparseMatrix< double > _weightedStiffness( size_t fNum , Elements && E , ElementIndex && Idx , WeightField && WF ) const;
+
 
 			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , typename Elements , typename ElementIndex , HasMeshSystemLinearMapOrBilinearFormFunction< K , NumElementsPerSimplex , T > SystemField >
 			Eigen::SparseMatrix< double > _system( size_t fNum , Elements && E , ElementIndex && Idx , SystemField && Sys , bool needsScaling ) const;
