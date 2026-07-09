@@ -269,6 +269,14 @@ void RiemannianMesh< K , MeshType >::_setSystemEntries( SystemIntegration::Eigen
 }
 
 template< unsigned int K , typename MeshType >
+template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , HasMeshFunction< K , SquareMatrix< double , NumElementsPerSimplex > > SystemField >
+void RiemannianMesh< K , MeshType >::_setSystemEntries( SystemIntegration::EigenMatrixEntries< NumElementsPerSimplex > & eme , SystemField && Sys ) const
+{
+	auto MF = ScaledField< K >( measureScaleField() , std::forward< SystemField >( Sys ) );
+	return SystemIntegration::MCIntegrator< K , QuadratureSamples >::template SetMatrixEntries< NumElementsPerSimplex >( eme , simplexNum() , MF );
+}
+
+template< unsigned int K , typename MeshType >
 template< unsigned int NumElementsPerSimplex , typename T , HasMeshTangentVectorFunction< K > TangentVectorField >
 auto RiemannianMesh< K , MeshType >::_DerivationSystemField( TangentVectorField && VF )
 {

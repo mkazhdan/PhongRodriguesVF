@@ -58,7 +58,7 @@ CmdLineParameter< unsigned int >
 	QuadratureSamples( "qSamples" , DEFAULT_QUADRATURE );
 
 CmdLineReadable
-	Commutator( "commutator" ) ,
+	CovariantDerivativeDifference( "covDiff" ) ,
 	Verbose( "verbose" );
 
 
@@ -68,7 +68,7 @@ std::vector< CmdLineReadable * > params =
 	&Out ,
 	&QuadratureSamples ,
 	&LoopNormalIterations ,
-	&Commutator ,
+	&CovariantDerivativeDifference ,
 	&Verbose ,
 };
 
@@ -79,7 +79,7 @@ void ShowUsage( const char* ex )
 	printf( "\t[--%s <output vector field>]\n" , Out.name.c_str() );
 	printf( "\t[--%s <quadrature samples in {%s}>=%d]\n" , QuadratureSamples.name.c_str() , QuadratureValuesString().c_str() , QuadratureSamples.value );
 	printf( "\t[--%s <loop normal iterations>=%d]\n" , LoopNormalIterations.name.c_str() , LoopNormalIterations.value );
-	printf( "\t[--%s]\n" , Commutator.name.c_str() );
+	printf( "\t[--%s]\n" , CovariantDerivativeDifference.name.c_str() );
 	printf( "\t[--%s]\n" , Verbose.name.c_str() );
 }
 
@@ -99,13 +99,13 @@ std::vector< Point< double , Dim > > GetBracket( const EmbeddedPhongMesh< K > &m
 	LLtSolver solver( M );
 	if( Verbose.set ) std::cout << "Factorized system matrices: " << timer() << std::endl;
 
-	// Compute the bracket/commutator of the two vector fields and integrate against the Phong-Rodrigues vector-field basis
+	// Compute the bracket/difference of covariant derivatives of the two vector fields and integrate against the Phong-Rodrigues vector-field basis
 	Eigen::VectorXd _Z;
-	if( Commutator.set ) _Z = mesh.template dual< Quadrature >( SimplicialMesh::PhongRodriguesCommutatorField< K >( mesh , X , Y ) );
-	else                 _Z = mesh.template dual< Quadrature >( SimplicialMesh::PhongRodriguesLieBracketField< K >( mesh , X , Y ) );
+	if( CovariantDerivativeDifference.set ) _Z = mesh.template dual< Quadrature >( SimplicialMesh::PhongRodriguesCovariantDerivativeDifferenceField< K >( mesh , X , Y ) );
+	else                                    _Z = mesh.template dual< Quadrature >( SimplicialMesh::PhongRodriguesLieBracketField< K >( mesh , X , Y ) );
 	if( Verbose.set )
-		if( Commutator.set ) std::cout << "Got commutator: " << timer() << std::endl;
-		else                 std::cout << "Got Lie bracket: " << timer() << std::endl;
+		if( CovariantDerivativeDifference.set ) std::cout << "Got difference of covariant derivatives: " << timer() << std::endl;
+		else                                    std::cout << "Got Lie bracket: " << timer() << std::endl;
 
 	// Compute the least-squares best-fit within the space spanned by the Phong-Rodrigues vector-field basis
 	_Z = P * solver.solve( Pt * _Z );

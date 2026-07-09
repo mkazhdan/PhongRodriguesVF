@@ -151,6 +151,11 @@ namespace MishaK
 
 			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasElementsAndDifferentiableElements< K , T > Elements , HasMeshSystemAndDSystemFunction< K , NumElementsPerSimplex , T > SystemField >
 			void _setSystemEntries( SystemIntegration::EigenMatrixEntries< NumElementsPerSimplex > & eme , Elements && E , SystemField && Sys ) const;
+
+			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , HasMeshFunction< K , SquareMatrix< double , NumElementsPerSimplex > > SystemField >
+			void _setSystemEntries( SystemIntegration::EigenMatrixEntries< NumElementsPerSimplex > & eme ,                 SystemField && Sys ) const;
+
+
 			template< unsigned int NumElementsPerSimplex , typename T , HasMeshTangentVectorFunction< K > TangentVectorField >
 			static auto _DerivationSystemField( TangentVectorField && VF );
 		};

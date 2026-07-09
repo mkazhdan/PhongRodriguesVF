@@ -111,6 +111,9 @@ Supported values are in {1, 3, 4, 6, 7, 12, 13, 24, 27, 32}.<BR>
  The default value for this parameter is 3.
 </dd>
 
+<dt>[<b>--covDiff</b>]</dt>
+<dd> If this flag is enabled, the method computes the covariant derivatives of the two vector-fields, evaluates each of those along the other vector-field, and returns the difference.
+
 <dt>[<b>--verbose</b>]</dt>
 <dd> If this flag is enabled, performance information is printed to <CODE>stdout</CODE>.
 

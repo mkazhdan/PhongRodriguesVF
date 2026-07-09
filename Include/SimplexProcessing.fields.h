@@ -382,18 +382,18 @@ namespace MishaK
 			using CovariantDerivativeField< K , N , VectorField >::_vf;
 		};
 
-		/////////////////////////////////////////////////////////////
-		// The (extrinsic) commutator of two GENERIC vector-fields //
-		/////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////////////////////////
+		// The (extrinsic) difference of the covariant derivatives of two GENERIC vector-fields //
+		//////////////////////////////////////////////////////////////////////////////////////////
 		template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField1 , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField2 >
-		struct CommutatorField : public PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >
+		struct CovariantDerivativeDifferenceField : public PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >
 		{
 			using T = Point< double , N >;
 
 			static T Value( const SquareMatrix< double , K > & gInv , const Point< double , N > & normal , const Point< double , N > normals[K+1] , const Matrix< double , K , N > & xForm , const VectorField1 & vf1 , const VectorField2 & vf2 , Position< K > p );
 
-			CommutatorField( const Point< double , N > vertices[K+1] , const Point< double , N > normals[K+1] , const VectorField1 & vf1 , const VectorField1 & vf2 ) : PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >( vertices , normals ) , _vf1(vf1) , _vf2(vf2) {};
-			CommutatorField( const Simplex< double , N , K > & vertices , const Simplex< double , N , K > & normals , const VectorField1 & vf1 , const VectorField1 & vf2 ) : CommutatorField( &vertices[0] , &normals[0] , vf1 , vf2 ){}
+			CovariantDerivativeDifferenceField( const Point< double , N > vertices[K+1] , const Point< double , N > normals[K+1] , const VectorField1 & vf1 , const VectorField1 & vf2 ) : PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >( vertices , normals ) , _vf1(vf1) , _vf2(vf2) {};
+			CovariantDerivativeDifferenceField( const Simplex< double , N , K > & vertices , const Simplex< double , N , K > & normals , const VectorField1 & vf1 , const VectorField1 & vf2 ) : CovariantDerivativeDifferenceField( &vertices[0] , &normals[0] , vf1 , vf2 ){}
 
 			T operator()( Position< K > p ) const { return Value( _gInv , _normal , _normals , _xForm , _vf1 , _vf2 , p ); }
 
@@ -485,11 +485,11 @@ namespace MishaK
 		template< unsigned int K , unsigned int N , bool Modulate=true >
 		using PhongRodriguesDivergenceField = _SinglePhongRodriguesFunctionality< DivergenceField , K , N , Modulate >;
 
-		/////////////////////////////////////////////////////////////////////
-		// The (extrinsic) commutator of two Phong-Rodrigues vector-fields //
-		/////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////////////////////////////////
+		// The (extrinsic) difference of the covariant derivatives of two Phong-Rodrigues vector-fields //
+		//////////////////////////////////////////////////////////////////////////////////////////////////
 		template< unsigned int K , unsigned int N , bool Modulate=true >
-		using PhongRodriguesCommutatorField = _DoublePhongRodriguesFunctionality< CommutatorField , K , N , Modulate >;
+		using PhongRodriguesCovariantDerivativeDifferenceField = _DoublePhongRodriguesFunctionality< CovariantDerivativeDifferenceField , K , N , Modulate >;
 
 		//////////////////////////////////////////////////////////////////////
 		// The (extrinsic) Lie-Bracket of two Phong-Rodrigues vector-fields //

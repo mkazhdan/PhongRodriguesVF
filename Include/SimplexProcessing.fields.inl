@@ -509,12 +509,12 @@ DivergenceField< K , N , VectorField >::Value
 	return CovariantDerivativeField< K , N , VectorField >::Value( gInv , normal , normals , xForm , VF , p ).trace();
 }
 
-/////////////////////
-// CommutatorField //
-/////////////////////
+////////////////////////////////////////
+// CovariantDerivativeDifferenceField //
+////////////////////////////////////////
 template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField1 , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField2 >
-typename CommutatorField< K , N , VectorField1 , VectorField2 >::T
-CommutatorField< K , N , VectorField1 , VectorField2 >::Value
+typename CovariantDerivativeDifferenceField< K , N , VectorField1 , VectorField2 >::T
+CovariantDerivativeDifferenceField< K , N , VectorField1 , VectorField2 >::Value
 (
 	const SquareMatrix< double , K > & gInv ,
 	const Point< double , N > & normal ,
@@ -534,7 +534,7 @@ CommutatorField< K , N , VectorField1 , VectorField2 >::Value
 	// The differentials of the extrinsic tangent vector fields
 	Differential< K , Point< double , K+1 > > dvf1 = VF1.d(p) , dvf2 = VF2.d(p);
 
-	// The commutator
+	// The difference of covariant derivatives
 	return dvf2( vf1 ) - dvf1( vf2 );
 }
 
