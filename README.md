@@ -1,4 +1,4 @@
-<center><h2>Phong-Rodrigues Extrinsic Vector-Field Processing (Version 1.00)</h2></center>
+<center><h2>Phong-Rodrigues Extrinsic Vector-Field Processing (Version 1.10)</h2></center>
 <center>
 <a href="#LINKS">links</a>
 <a href="#EXECUTABLES">executables</a>
@@ -20,15 +20,13 @@ This software supports vector-field processing using the extrinsically defined P
 <a href="http://www.cs.jhu.edu/~misha/MyPapers/SGP26.pdf">[Liu, Stein, Vaxman, Ben-Chen, and Kazhdan, 2026]</a>
 <br>
 <b>Executables: </b>
-<a href="https://www.cs.jhu.edu/~misha/Code/PhongRodriguesVF/Version1.00/PRVF.x64.zip">Win64</a><br>
+<a href="https://www.cs.jhu.edu/~misha/Code/PhongRodriguesVF/Version1.10/PRVF.x64.zip">Win64</a><br>
 <b>Source Code:</b>
-<a href="https://www.cs.jhu.edu/~misha/Code/PhongRodriguesVF/Version1.00/PRVF.Source.zip">ZIP</a> <a href="https://github.com/mkazhdan/PhongRodriguesVF">GitHub</a><br>
+<a href="https://www.cs.jhu.edu/~misha/Code/PhongRodriguesVF/Version1.10/PRVF.Source.zip">ZIP</a> <a href="https://github.com/mkazhdan/PhongRodriguesVF">GitHub</a><br>
 <B>Data:</B>
 <A HREF="https://www.cs.jhu.edu/~misha/Code/PhongRodriguesVF/PRVF.Data.zip">ZIP</A><br>
-<!--
 <b>Older Versions:</b>
 <a href="https://www.cs.jhu.edu/~misha/Code/TextureSignalProcessing/Version1.00/">V1.00</a>
--->
 </ul>
 <hr>
 <a name="EXECUTABLES"><b>EXECUTABLES</b></a><br>
@@ -224,6 +222,11 @@ One can obtain <CODE>Eigen::VectorXd</CODE> of size <code>3&middot;|V|</CODE> gi
 <a href="https://www.cs.jhu.edu/~misha/Code/PhongRodriguesVF/Version1.00/">Version 1.00</a>:
 <ul>
 <li> initial source code
+</ul>
+
+<a href="https://www.cs.jhu.edu/~misha/Code/PhongRodriguesVF/Version1.10/">Version 1.10</a>:
+<ul>
+<li> added support for computing the Lie bracket, independent of the metric and/or connection.
 </ul>
 
 </details>
