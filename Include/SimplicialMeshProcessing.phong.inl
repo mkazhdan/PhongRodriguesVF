@@ -345,60 +345,6 @@ Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::weightedStiffness( WeightF
 }
 
 template< unsigned int K >
-template< unsigned int QuadratureSamples , typename TangentVectorField >
-Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::bracketEnergy( TangentVectorField && V ) const
-{
-	static const unsigned int NumE = SimplexProcessing::PhongRodriguesVectorElements< K , Dim >::NumElements;
-
-	auto Sys = [&]( size_t sIdx )
-	{
-		return [tE2I=SimplexProcessing::PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >(simplexVertices(sIdx),simplexNormals(sIdx)),tN=this->normalField(sIdx),tG=this->metricTensorField(sIdx),tGInv=this->inverseMetricTensorField(sIdx),tV=V[sIdx]]( SimplexProcessing::Position< K > p )
-		{
-			return [e2i=tE2I(p),n=tN(p),gInv=tGInv(p),v=tV(p),dv=tV.d(p)]( const SimplexProcessing::ValueAndDifferential< K , Vector > d[] )
-			{
-				Point< double , K > _x = e2i * v;
-				Point< double , K+1 > _z[ NumE ];
-				for( unsigned int e=0 ; e<NumE ; e++ )
-				{
-					_z[e] = d[e].template get<1>()( _x ) - dv( e2i * d[e].template get<0>() );
-					_z[e] -= n * Point< double , K+1 >::Dot( _z[e] , n );
-				}
-
-				SquareMatrix< double , NumE > mass;
-				for( unsigned int n=0 ; n<NumE ; n++ ) for( unsigned int m=0 ; m<NumE ; m++ )
-					mass(n,m) = Point< double , K+1 >::Dot( _z[n] , _z[m] );
-				return mass;
-			};
-		};
-	};
-	return this->template system< QuadratureSamples >( SimplexProcessing::ArrayWrapper( Sys ) );
-}
-
-template< unsigned int K >
-template< unsigned int QuadratureSamples , typename TangentVectorField >
-Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::dotProductEnergy( TangentVectorField && V ) const
-{
-	static const unsigned int NumE = SimplexProcessing::PhongRodriguesVectorElements< K , Dim >::NumElements;
-
-	auto Sys = [&]( size_t sIdx )
-	{
-		return [tV=V[sIdx]]( SimplexProcessing::Position< K > p )
-		{
-			return [v=tV(p)]( const Vector d[] )
-			{
-				double dot[ NumE ];
-				for( unsigned int n=0 ; n<NumE ; n++ ) dot[n] = Point< double , K+1 >::Dot( v , d[n] );
-
-				SquareMatrix< double , NumE > mass;
-				for( unsigned int n=0 ; n<NumE ; n++ ) for( unsigned int m=0 ; m<NumE ; m++ ) mass(n,m) = dot[n] * dot[m];
-				return mass;
-			};
-		};
-	};
-	return this->template system< QuadratureSamples >( SimplexProcessing::ArrayWrapper( Sys ) );
-}
-
-template< unsigned int K >
 Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::J( void ) const requires( K==2 )
 {
 	auto NormalRotation = []( Point< double , Dim > n )

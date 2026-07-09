@@ -223,6 +223,21 @@ Eigen::SparseMatrix< double > RiemannianMesh< K , MeshType >::_system( size_t fN
 }
 
 template< unsigned int K , typename MeshType >
+template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , HasElementIndexFunctor ElementIndex , HasMeshFunction< K , SquareMatrix< double , NumElementsPerSimplex > > SystemField >
+Eigen::SparseMatrix< double > RiemannianMesh< K , MeshType >::_system( size_t fNum , ElementIndex && Idx , SystemField && Sys , bool needsScaling ) const
+{
+	if( needsScaling )
+	{
+		auto _Sys = ScaledField< K >( measureScaleField() , std::forward< SystemField >( Sys ) );
+		return SystemIntegration::MCIntegrator< K , QuadratureSamples >::template Matrix< NumElementsPerSimplex >( fNum , simplexNum() , std::forward< ElementIndex >( Idx ) , _Sys );
+	}
+	else
+	{
+		return SystemIntegration::MCIntegrator< K , QuadratureSamples >::template Matrix< NumElementsPerSimplex >( fNum , simplexNum() , std::forward< ElementIndex >( Idx ) , Sys );
+	}
+}
+
+template< unsigned int K , typename MeshType >
 template< unsigned int NumElementsPerSimplex , HasElementIndexFunctor ElementIndex >
 SystemIntegration::EigenMatrixEntries< NumElementsPerSimplex > RiemannianMesh< K , MeshType >::_eigenMatrixEntries( size_t fNum , ElementIndex && Idx ) const
 {

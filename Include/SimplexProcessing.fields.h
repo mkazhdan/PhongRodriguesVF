@@ -382,18 +382,42 @@ namespace MishaK
 			using CovariantDerivativeField< K , N , VectorField >::_vf;
 		};
 
-		//////////////////////////////////////////////////////////
-		// The (extrinsic) bracket of two GENERIC vector-fields //
-		//////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////
+		// The (extrinsic) commutator of two GENERIC vector-fields //
+		/////////////////////////////////////////////////////////////
 		template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField1 , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField2 >
-		struct BracketField : public PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >
+		struct CommutatorField : public PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >
 		{
 			using T = Point< double , N >;
 
 			static T Value( const SquareMatrix< double , K > & gInv , const Point< double , N > & normal , const Point< double , N > normals[K+1] , const Matrix< double , K , N > & xForm , const VectorField1 & vf1 , const VectorField2 & vf2 , Position< K > p );
 
-			BracketField( const Point< double , N > vertices[K+1] , const Point< double , N > normals[K+1] , const VectorField1 & vf1 , const VectorField1 & vf2 ) : PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >( vertices , normals ) , _vf1(vf1) , _vf2(vf2) {};
-			BracketField( const Simplex< double , N , K > & vertices , const Simplex< double , N , K > & normals , const VectorField1 & vf1 , const VectorField1 & vf2 ) : BracketField( &vertices[0] , &normals[0] , vf1 , vf2 ){}
+			CommutatorField( const Point< double , N > vertices[K+1] , const Point< double , N > normals[K+1] , const VectorField1 & vf1 , const VectorField1 & vf2 ) : PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >( vertices , normals ) , _vf1(vf1) , _vf2(vf2) {};
+			CommutatorField( const Simplex< double , N , K > & vertices , const Simplex< double , N , K > & normals , const VectorField1 & vf1 , const VectorField1 & vf2 ) : CommutatorField( &vertices[0] , &normals[0] , vf1 , vf2 ){}
+
+			T operator()( Position< K > p ) const { return Value( _gInv , _normal , _normals , _xForm , _vf1 , _vf2 , p ); }
+
+		protected:
+			using PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::_gInv;
+			using PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::_normal;
+			using PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::_normals;
+			using PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::_xForm;
+			VectorField1 _vf1;
+			VectorField2 _vf2;
+		};
+
+		//////////////////////////////////////////////////////////////
+		// The (extrinsic) Lie bracket of two GENERIC vector-fields //
+		//////////////////////////////////////////////////////////////
+		template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField1 , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField2 >
+		struct LieBracketField : public PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >
+		{
+			using T = Point< double , N >;
+
+			static T Value( const SquareMatrix< double , K > & gInv , const Point< double , N > & normal , const Point< double , N > normals[K+1] , const Matrix< double , K , N > & xForm , const VectorField1 & vf1 , const VectorField2 & vf2 , Position< K > p );
+
+			LieBracketField( const Point< double , N > vertices[K+1] , const Point< double , N > normals[K+1] , const VectorField1 & vf1 , const VectorField1 & vf2 ) : PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >( vertices , normals ) , _vf1(vf1) , _vf2(vf2) {};
+			LieBracketField( const Simplex< double , N , K > & vertices , const Simplex< double , N , K > & normals , const VectorField1 & vf1 , const VectorField1 & vf2 ) : LieBracketField( &vertices[0] , &normals[0] , vf1 , vf2 ){}
 
 			T operator()( Position< K > p ) const { return Value( _gInv , _normal , _normals , _xForm , _vf1 , _vf2 , p ); }
 
@@ -461,11 +485,17 @@ namespace MishaK
 		template< unsigned int K , unsigned int N , bool Modulate=true >
 		using PhongRodriguesDivergenceField = _SinglePhongRodriguesFunctionality< DivergenceField , K , N , Modulate >;
 
-		//////////////////////////////////////////////////////////////////
-		// The (extrinsic) bracket of two Phong-Rodrigues vector-fields //
-		//////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////
+		// The (extrinsic) commutator of two Phong-Rodrigues vector-fields //
+		/////////////////////////////////////////////////////////////////////
 		template< unsigned int K , unsigned int N , bool Modulate=true >
-		using PhongRodriguesBracketField = _DoublePhongRodriguesFunctionality< BracketField , K , N , Modulate >;
+		using PhongRodriguesCommutatorField = _DoublePhongRodriguesFunctionality< CommutatorField , K , N , Modulate >;
+
+		//////////////////////////////////////////////////////////////////////
+		// The (extrinsic) Lie-Bracket of two Phong-Rodrigues vector-fields //
+		//////////////////////////////////////////////////////////////////////
+		template< unsigned int K , unsigned int N , bool Modulate=true >
+		using PhongRodriguesLieBracketField = _DoublePhongRodriguesFunctionality< LieBracketField , K , N , Modulate >;
 
 		// PHONG-RODRIGUES FUNCTIONS ON THE MESH
 		////////////////////////////////////////

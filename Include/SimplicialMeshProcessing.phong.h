@@ -121,14 +121,6 @@ namespace MishaK
 			template< unsigned int QuadratureSamples , CovariantComponent CComponent , HasMeshScaleFactorFunction< K > WeightField >
 			Eigen::SparseMatrix< double > weightedStiffness( WeightField && WF ) const;
 
-			// Gives the squared-norm of the bracket with v
-			template< unsigned int QuadratureSamples , typename TangentVectorField >
-			Eigen::SparseMatrix< double > bracketEnergy( TangentVectorField && V ) const;
-
-			// Gives the squared-norm of the dot-product with v
-			template< unsigned int QuadratureSamples , typename TangentVectorField >
-			Eigen::SparseMatrix< double > dotProductEnergy( TangentVectorField && V ) const;
-
 			template< unsigned int QuadratureSamples , typename SystemField >
 			Eigen::SparseMatrix< double > system( SystemField && Sys , bool needsScaling=true ) const;
 

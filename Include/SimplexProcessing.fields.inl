@@ -509,12 +509,12 @@ DivergenceField< K , N , VectorField >::Value
 	return CovariantDerivativeField< K , N , VectorField >::Value( gInv , normal , normals , xForm , VF , p ).trace();
 }
 
-//////////////////
-// BracketField //
-//////////////////
+/////////////////////
+// CommutatorField //
+/////////////////////
 template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField1 , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField2 >
-typename BracketField< K , N , VectorField1 , VectorField2 >::T
-BracketField< K , N , VectorField1 , VectorField2 >::Value
+typename CommutatorField< K , N , VectorField1 , VectorField2 >::T
+CommutatorField< K , N , VectorField1 , VectorField2 >::Value
 (
 	const SquareMatrix< double , K > & gInv ,
 	const Point< double , N > & normal ,
@@ -534,6 +534,48 @@ BracketField< K , N , VectorField1 , VectorField2 >::Value
 	// The differentials of the extrinsic tangent vector fields
 	Differential< K , Point< double , K+1 > > dvf1 = VF1.d(p) , dvf2 = VF2.d(p);
 
-	// The bracket
+	// The commutator
 	return dvf2( vf1 ) - dvf1( vf2 );
+}
+
+/////////////////////
+// LieBracketField //
+/////////////////////
+template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField1 , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField2 >
+typename LieBracketField< K , N , VectorField1 , VectorField2 >::T
+LieBracketField< K , N , VectorField1 , VectorField2 >::Value
+(
+	const SquareMatrix< double , K > & gInv ,
+	const Point< double , N > & normal ,
+	const Point< double , N > normals[K+1] ,
+	const Matrix< double , K , N > & xForm ,
+	const VectorField1 & VF1 ,
+	const VectorField2 & VF2 ,
+	Position< K > p
+)
+{
+	// The intrinsic/extrinsic transformations
+	Matrix< double , K , N > i2e = PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::Value( normal , normals , xForm , p );
+	Matrix< double , N , K > e2i = PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::Value( gInv , i2e );
+	Differential< K , Matrix< double , K , N > > di2e = PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::DValue( normal , normals , xForm , p );
+	Differential< K , Matrix< double , N , K > > de2i = PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::DValue( gInv , di2e );
+
+	// The extrinsic evaluations of the vector-fields and their derivatives
+	Point< double , N > v1_e = VF1(p);
+	Point< double , N > v2_e = VF2(p);
+	Differential< K , Point< double , N > > dv1_e = VF1.d(p);
+	Differential< K , Point< double , N > > dv2_e = VF2.d(p);
+
+	// The intrinsic evaluations of the vector-fields and their derivatives
+	Point< double , K > v1_i = IntrinsicVectorField< K , N , VectorField1 >::Value( e2i , v1_e );
+	Point< double , K > v2_i = IntrinsicVectorField< K , N , VectorField2 >::Value( e2i , v2_e );
+	Differential< K , Point< double , K > > dv1_i = IntrinsicVectorField< K , N , VectorField1 >::DValue( e2i , de2i , v1_e , dv1_e );
+	Differential< K , Point< double , K > > dv2_i = IntrinsicVectorField< K , N , VectorField2 >::DValue( e2i , de2i , v2_e , dv2_e );
+
+	// The intrinsic bracket
+	Point< double , K > b_i;
+	for( unsigned int k=0 ; k<K ; k++ ) b_i += dv2_i[k] * v1_i[k] - dv1_i[k] * v2_i[k];
+
+	// The extrinsic bracket
+	return i2e * b_i;
 }

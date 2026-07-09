@@ -135,6 +135,9 @@ namespace MishaK
 			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasElementsAndDifferentiableElements< K , T > Elements , HasElementIndexFunctor ElementIndex , HasMeshSystemAndDSystemFunction< K , NumElementsPerSimplex , T > SystemField >
 			Eigen::SparseMatrix< double > _system( size_t fNum , Elements && E , ElementIndex && Idx , SystemField && Sys , bool needsScaling ) const;
 
+			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , HasElementIndexFunctor ElementIndex , HasMeshFunction< K , SquareMatrix< double , NumElementsPerSimplex > > SystemField >
+			Eigen::SparseMatrix< double > _system( size_t fNum ,                 ElementIndex && Idx , SystemField && Sys , bool needsScaling ) const;
+
 
 			// Functionality for setting/resetting matrix entries
 			template< unsigned int NumElementsPerSimplex , HasElementIndexFunctor ElementIndex >

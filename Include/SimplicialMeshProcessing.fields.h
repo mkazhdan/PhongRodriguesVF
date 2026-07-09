@@ -154,11 +154,17 @@ namespace MishaK
 		template< unsigned int K >
 		using PhongRodriguesDivergenceField = EmbeddedPhongMeshField< K , SimplexProcessing::PhongRodriguesDivergenceField< K , K+1 > , Point< double , K+1 > >;
 
-		///////////////////////////////////////////////////////////////////////////////////
-		// A class returning the bracket of the associated Phong-Rodrigues vector-fields //
-		///////////////////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////////////////////
+		// A class returning the commutator of the associated Phong-Rodrigues vector-fields //
+		//////////////////////////////////////////////////////////////////////////////////////
 		template< unsigned int K >
-		using PhongRodriguesBracketField = EmbeddedPhongMeshField< K , SimplexProcessing::PhongRodriguesBracketField< K , K+1 > , Point< double , K+1 > , Point< double , K+1 > >;
+		using PhongRodriguesCommutatorField = EmbeddedPhongMeshField< K , SimplexProcessing::PhongRodriguesCommutatorField< K , K+1 > , Point< double , K+1 > , Point< double , K+1 > >;
+
+		///////////////////////////////////////////////////////////////////////////////////////
+		// A class returning the Lie-Bracket of the associated Phong-Rodrigues vector-fields //
+		///////////////////////////////////////////////////////////////////////////////////////
+		template< unsigned int K >
+		using PhongRodriguesLieBracketField = EmbeddedPhongMeshField< K , SimplexProcessing::PhongRodriguesLieBracketField< K , K+1 > , Point< double , K+1 > , Point< double , K+1 > >;
 
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// A class returning the covariant derivative of the one Phong-Rodrigues vector-field with respect to the other //
