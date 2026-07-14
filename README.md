@@ -279,7 +279,7 @@ Eigen::SparseMatrix&lt;double&gt; stiffness_euclidean = mesh.template stiffnessM
 // Compute the prolongation matrix from tangent to Euclidean coordinates
 Eigen::SparseMatrix&lt;double&gt; prolongation = mesh.tangentProlongation();
 
-// Comptue the tangent system matrices
+// Compute the tangent system matrices
 Eigen::SparseMatrix&lt;double&gt; mass_tangent = prolongation.transpose() * mass_euclidean * prolongation;
 Eigen::SparseMatrix&lt;double&gt; stiffness_tangent = prolongation.transpose() * stiffness_euclidean * prolongation;
 
