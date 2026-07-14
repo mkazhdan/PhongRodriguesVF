@@ -30,8 +30,6 @@ DAMAGE.
 
 #include "Misha/Miscellany.h"
 #include "Misha/CmdLineParser.h"
-#include "Misha/Geometry.h"
-#include "Misha/PlyData.h"
 
 #include "Include/PreProcessing.h"
 #include "Include/PlyIO.h"
