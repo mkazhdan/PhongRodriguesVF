@@ -2,6 +2,7 @@
 Bin/
 Data/
 Scratch/
+index.html
 *.filters
 *.user
 *.o
