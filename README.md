@@ -186,9 +186,9 @@ The implementation is header-only.
 Most of the functionality is defined by the class <CODE>EmbeddedPhongMesh&lt;2&gt;</CODE>.
 <LI> To define a mesh object, call the constructor:
 <BLOCKQUOTE><CODE>
-EmbeddedPhongMesh&lt;2&gt;::EmbeddedPhongMesh( std::vector&lt; Point&lt;double,3&gt; &gt; &amp; vertices , std::vector&lt; Point&lt;double,3&gt; &gt; &amp; normals , std::vector&lt; SimplexIndex&lt;2&gt; &gt; &amp; triangles );
+EmbeddedPhongMesh&lt;2&gt;::EmbeddedPhongMesh( std::vector&lt; MishaK::Point&lt;double,3&gt; &gt; &amp; vertices , std::vector&lt; MishaK::Point&lt;double,3&gt; &gt; &amp; normals , std::vector&lt; MishaK::SimplexIndex&lt;2&gt; &gt; &amp; triangles );
 </CODE></BLOCKQUOTE>
-The geometry is reprsented as an indexed mesh, with:
+The geometry is represented as an indexed mesh, with:
 <UL>
 <LI>
 The (shared) vertices and normals described using <code>std::vector</code>s of type <code>MishaK::Point&lt;double,3&gt;</code>, which acts as an array of size <code>3</CODE> and additionally supports algebraic operations.
@@ -200,40 +200,33 @@ Note that the constructed mesh captures the vertex, normal, and triangle informa
 <DT><B>System Representation</B></DT>
 <DD>
 <UL>
-<LI>System matrices are natively represented using <A HREF="https://libeigen.gitlab.io/eigen/docs-5.0/">Eigen</A>'s sparse-matrix <code>Eigen::SparseMatrix&lt;double&gt;</code> class and system vectors are represented using the <code>Eigen::VectorXd</code> class. For a triangle mesh with <code>|V|</CODE> vertices, the extrinsic representation of the vector-field has <code>3&middot;|V|</code> degrees of freedom, with the three coordinates of the vector at vertex <code>i</code> encoded in entries <code>3&middot;i</code>, <code>3&middot;i+1</code>, and <code>3&middot;i+2</code>.
+<LI>System matrices are represented using <A HREF="https://libeigen.gitlab.io/eigen/docs-5.0/">Eigen</A>'s sparse-matrix <code>Eigen::SparseMatrix&lt;double&gt;</code> class and system vectors are represented using the <code>Eigen::VectorXd</code> class. For a triangle mesh with <code>|V|</CODE> vertices, the extrinsic representation of the vector-field has <code>3&middot;|V|</code> degrees of freedom, with the three Euclidean coordinates of the vector at vertex <code>i</code> encoded in entries <code>3&middot;i</code>, <code>3&middot;i+1</code>, and <code>3&middot;i+2</code>.
 <LI> In practice, processing is done over <b>tangent</b> vector-fields, so that there are only two degrees of freedom per vertex. This can be realized by selecting a frame for each vertex, perpendicular to the vertex's normal, and describing the vertex's tangent vector with respect to the frame. To facilitate this, the class defines the member function:
-<BLOCKQUOTE>
-<CODE>
-Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::tangentProlongation( void )</CODE>
-</BLOCKQUOTE>
-which returns a sparse <code>3&middot;|V|&times;2&middot;|V|</code> matrix mapping a representation of tangent vectors in terms of two degrees of freedom at a vertex (with respect to a frame perpendicular to the normal) to the 3D coordinates of the tangent vectors at the vertices. The frame is chosen to be orthonormal, so that if <CODE>P</CODE> is the matrix returned by the method, the matrix <CODE>P.transpose()*P</CODE> is the <code>3&middot;|V|&times;3&middot;|V|</code> matrix describing the operation of projecting out the normal component. Thus, for example:
+<BLOCKQUOTE><CODE>
+Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::tangentProlongation( void )
+</CODE></BLOCKQUOTE>
+which returns a sparse <code>3&middot;|V|&times;2&middot;|V|</code> matrix mapping a representation of tangent vectors in terms of two degrees of freedom at a vertex (with respect to a frame perpendicular to the normal) to the Euclidean coordinates of the vectors at the vertices. The frame is chosen to be orthonormal, so that if <CODE>P</CODE> is the matrix returned by the method, the matrix <CODE>P.transpose()*P</CODE> is the <code>3&middot;|V|&times;3&middot;|V|</code> matrix describing the operation of projecting out the normal component. Thus, for example:
 <UL>
-<LI>Given a symmetric <code>3&middot;|V|&times;2&middot;|V|</code> matrix <CODE>Q</CODE> describing the energy of a vector-field expressed in terms 3D coordinates, the matrix representing the restriction of the energy to tangent-vectors is:
-<BLOCKQUOTE><CODE>P.transpose()*Q*P</CODE></BLOCKQUOTE>.
+<LI>Given a symmetric <code>3&middot;|V|&times;2&middot;|V|</code> matrix <CODE>Q</CODE> describing the energy of a vector-field expressed in terms Euclidean coordinates, the matrix representing the restriction of the energy to tangent-vectors is:
+<BLOCKQUOTE><CODE>P.transpose()*Q*P</CODE></BLOCKQUOTE>
 <LI>Given a <code>2&middot;|V|</code>-dimensional vector <code>v</code> describing the tangent-vectors at the vertices, with respect to the frame, the representation of the tangent-vectors in terms of Euclidean coordinates is:
 <BLOCKQUOTE><CODE>P*v</CODE></BLOCKQUOTE>
 <LI>Given a <code>3&middot;|V|</code>-dimensional vector <code>d</code> describing the dual of a vector-field with respect to the Euclidean Phong-Rodrigues basis (i.e. the integral of the vector-field against each of the <code>3&middot;|V|</code> basis vector-fields), the dual representation with respect to the tangent Phong-Rodrigues basis is:
-<BLOCKQUOTE><CODE>P.transpose()*d</CODE></BLOCKQUOTE>.
-<LI>Finally, because the implementation defines the prolongation matrix <code>P</code> using an <B>orthonormal</b> frame, given a <code>3&middot;|V|</code>-dimensional vector <code>v</code> describing the tangent-vectors at the vertices in Euclidean coordinates the representation of the tangent-vectors with respect to the frame is:
+<BLOCKQUOTE><CODE>P.transpose()*d</CODE></BLOCKQUOTE>
+<LI>Finally, because the implementation defines the prolongation matrix <code>P</code> using an orthonormal frame, given a <code>3&middot;|V|</code>-dimensional vector <code>v</code> describing the tangent-vectors at the vertices in Euclidean coordinates the representation of the tangent-vectors with respect to the frame is:
 <BLOCKQUOTE><CODE>P*v</CODE></BLOCKQUOTE>
 </UL>
 </UL>
 
 <DT><B>System Energies</B>
-<DD> The system supports computing symmetric, positive (semi-)definite <code>3&middot;|V|&times;3&middot;|V|</code> matrices representing different energies. All the functionalities are templated off of an <code>unsigned int</code> describing the number of quadrature samples to be used per triangle when computing integral.
+<DD> The system supports computing symmetric, positive (semi-)definite <code>3&middot;|V|&times;3&middot;|V|</code> matrices representing different energies. All the functionalities are templated off of an <code>unsigned int</code> describing the number of quadrature samples to be used per triangle when computing integrals.
 <UL>
 <LI> The mass matrix for extrinsic vector-fields can be obtained by invoking the member function:
-<BLOCKQUOTE><CODE>
-Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::template massMatrix&lt;QuadratureSamples&gt;( void )
-</CODE></BLOCKQUOTE>
+<BLOCKQUOTE><CODE>Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::template massMatrix&lt;QuadratureSamples&gt;( void )</CODE></BLOCKQUOTE>
 <LI> The stiffness matrix for extrinsic vector-fields, with respect to the connection energy, can be obtained by invoking the member function:
-<BLOCKQUOTE><CODE>
-Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::template stiffnessMatrix&lt;QuadratureSamples&gt;( void )
-</CODE></BLOCKQUOTE>
+<BLOCKQUOTE><CODE>Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::template stiffnessMatrix&lt;QuadratureSamples&gt;( void )</CODE></BLOCKQUOTE>
 <LI> The stiffness matrix for extrinsic vector-fields, with respect to a particular component (or combination of components) of the covariant derivative, can be obtained by invoking the member function:
-<BLOCKQUOTE><CODE>
-Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::template stiffnessMatrix&lt;QuadratureSamples,Component&gt;( void )
-</CODE></BLOCKQUOTE>
+<BLOCKQUOTE><CODE>Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::template stiffnessMatrix&lt;QuadratureSamples,Component&gt;( void )</CODE></BLOCKQUOTE>
 with <code>Component</code> an <code>unsigned int</code> flag indicating whether the divergence, curl, and/or anti-holomorphic components should be used in defining the stiffness. Possible values for <code>Component</code> include:
 <UL>
 <LI><CODE>SimplexProcessing::StiffnessComponent::Divergence()</CODE>
@@ -247,10 +240,10 @@ with <code>Component</code> an <code>unsigned int</code> flag indicating whether
 </UL>
 
 <DT><B>Vector-Field Representation</B>
-<DD> While a vector-field can be represented as an <code>std::vector</code> of <code>Point&lt;double,3&gt;</code> objects describing the Euclidean coordinates of the (tangent) vector-field values at the vertices, the code also supports a more abstract functional representation. In particular, if an object <code>VectorField</code> satisfies the concept:
+<DD> While a vector-field can be represented as an <code>std::vector</code> of <code>MishaK::Point&lt;double,3&gt;</code> objects describing the Euclidean coordinates of the (tangent) vector-field values at the vertices, the code also supports a more abstract functional representation. In particular, if an object <code>VectorField</code> satisfies the concept:
 <BLOCKQUOTE>
 <CODE>
-concept HasMeshVectorField = requires( const VectorField f , size_t idx , Point&lt;double,2&gt; p ) { { f[idx](p) } -> std::same_as&lt; Point&lt;double,3&gt; &gt; };
+concept HasMeshVectorField = requires( const VectorField f , size_t idx , MishaK::Point&lt;double,2&gt; p ) { { f[idx](p) } -> std::same_as&lt; MishaK::Point&lt;double,3&gt; &gt; };
 </CODE>
 </BLOCKQUOTE>
 behaving as an array of functions on triangles (with triangles indexed by <code>idx</code> and triangle positions described by <code>p</code>) that return the Euclidan representation of a vector, then the dual representation of the vector-field represented by such an object as a vector of size <code>3&middot;|V|</code>, obtained by integrating against the extrinsic Phong-Rodrigues basis vector-fields, can be obtained by invoking the member function:
@@ -259,27 +252,43 @@ Eigen::VectorXd EmbeddedPhongMesh&lt;2&gt;::template massVector&lt;QuadratureSam
 </CODE></BLOCKQUOTE>
 
 <DT><B>Example: Computing the Killing Vector-Field</B>
-<DD>Given vertex positions, vertex normals, and triangle incidence, the (most) Killing vector-field can be obtained by constructing an <code>EmbeddedPhongMesh&lt;2&gt;</code> object, computing the extrinsic mass and Killing stiffness energy matrices, restricting those to tangent energy matrices, solving the generalized eigen-value problem to get the tangent vector-field with smallest Killing energy, and prolonging that to obtain the Euclidean representation of the vector-field at each vertex:
-<BLOCKQUOTE><CODE>
-static const unsigned int QuadratureSamples = 3;<BR>
-<BR>
-std::vector&lt; MishaK::Point&lt;double,3&gt; &gt; vertices , normals;<BR>
-std::vector&lt; MishaK::SimplexIndex&lt;2&gt; &gt; triangles;<BR>
-// Initialize the mesh information<BR>
-<BR>
-MishaK::SimplicialMesh::EmbeddedPhongMesh&lt;2&gt; mesh( vertices , normals , triangles );<BR>
-Eigen::SparseMatrix&lt;double&gt; mass_euclidean = mesh.template massMatrix&lt; QuadratureSamples &gt;();<BR>
-Eigen::SparseMatrix&lt;double&gt; stiffness_euclidean = mesh.template stiffnessMatrix&lt; QuadratureSamples , MishaK::SimplexProcessing::StiffnessComponent::Killing() &gt;();<BR>
-Eigen::SparseMatrix&lt;double&gt; prolongation = mesh.tangentProlongation();<BR>
-<BR>
-Eigen::SparseMatrix&lt;double&gt; mass_tangent = prolongation.transpose() * mass_euclidean * prolongation;<BR>
-Eigen::SparseMatrix&lt;double&gt; stiffness_tangent = prolongation.transpose() * stiffness_euclidean * prolongation;<BR>
-<BR>
-Eigen::VectorXd killing_tangent;<BR>
-// Compute the smallest generalized eigen-vector of the pair of systems <code>{stiffness_tangent,mass_tangent}</code><BR>
-<BR>
+<DD>Given vertex positions, vertex normals, and triangle incidence, the (most) Killing vector-field can be obtained as follows:
+<UL>
+<LI>Construct an <code>EmbeddedPhongMesh&lt;2&gt;</code> object,
+<LI>Compute the extrinsic mass and Killing stiffness energy matrices,
+<LI>Restrict those to tangent energy matrices,
+<LI>Solve the generalized eigen-value problem to get the tangent vector-field with smallest Killing energy, and
+<LI>Prolong to obtain the Euclidean representation of the vector-field at each vertex.
+</UL>
+Assuming three quadrature samples per triangle, this can be implemented as follows:
+<PRE><CODE>static const unsigned int QuadratureSamples = 3;
+
+// Set the triangle mesh information
+std::vector&lt; MishaK::Point&lt;double,3&gt; &gt; vertices , normals;
+std::vector&lt; MishaK::SimplexIndex&lt;2&gt; &gt; triangles;
+// ...
+
+// Initialize the mesh
+MishaK::SimplicialMesh::EmbeddedPhongMesh&lt;2&gt; mesh( vertices , normals , triangles );
+
+// Compute the extrinsic/Euclidean system matrices
+Eigen::SparseMatrix&lt;double&gt; mass_euclidean = mesh.template massMatrix&lt; QuadratureSamples &gt;();
+Eigen::SparseMatrix&lt;double&gt; stiffness_euclidean = mesh.template stiffnessMatrix&lt; QuadratureSamples , MishaK::SimplexProcessing::StiffnessComponent::Killing() &gt;();
+
+// Compute the prolongation matrix from tangent to Euclidean coordinates
+Eigen::SparseMatrix&lt;double&gt; prolongation = mesh.tangentProlongation();
+
+// Comptue the tangent system matrices
+Eigen::SparseMatrix&lt;double&gt; mass_tangent = prolongation.transpose() * mass_euclidean * prolongation;
+Eigen::SparseMatrix&lt;double&gt; stiffness_tangent = prolongation.transpose() * stiffness_euclidean * prolongation;
+
+// Compute the smallest generalized eigen-vector of the pair of systems {stiffness_tangent,mass_tangent}
+Eigen::VectorXd killing_tangent;
+// ...
+
+// Compute the corresponding extrinsic/Euclidean vector-field representation
 Eigen::VectorXd killing_euclidean = prolongation * killing_tangent;
-</CODE></BLOCKQUOTE>
+</CODE></PRE>
 
 </DL>
 </OL>
