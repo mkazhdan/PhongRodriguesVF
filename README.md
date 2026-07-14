@@ -26,6 +26,7 @@ This software supports vector-field processing using the extrinsically defined P
 <B>Data:</B>
 <A HREF="https://www.cs.jhu.edu/~misha/Code/PhongRodriguesVF/PRVF.Data.zip">ZIP</A><br>
 <b>Older Versions:</b>
+<a href="https://www.cs.jhu.edu/~misha/Code/TextureSignalProcessing/Version1.10/">V1.10</a>,<BR>
 <a href="https://www.cs.jhu.edu/~misha/Code/TextureSignalProcessing/Version1.00/">V1.00</a>
 </ul>
 <hr>
