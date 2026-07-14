@@ -208,11 +208,11 @@ Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::tangentProlongatio
 </CODE></BLOCKQUOTE>
 which returns a sparse <code>3&middot;|V|&times;2&middot;|V|</code> matrix mapping a representation of tangent vectors in terms of two degrees of freedom at a vertex (with respect to a frame perpendicular to the normal) to the Euclidean coordinates of the vectors at the vertices. The frame is chosen to be orthonormal, so that if <CODE>P</CODE> is the matrix returned by the method, the matrix <CODE>P.transpose()*P</CODE> is the <code>3&middot;|V|&times;3&middot;|V|</code> matrix describing the operation of projecting out the normal component. Thus, for example:
 <UL>
-<LI>Given a symmetric <code>3&middot;|V|&times;2&middot;|V|</code> matrix <CODE>Q</CODE> describing the energy of a vector-field expressed in terms Euclidean coordinates, the matrix representing the restriction of the energy to tangent-vectors is:
+<LI>Given a symmetric <code>3&middot;|V|&times;2&middot;|V|</code> matrix <CODE>Q</CODE> describing the energy of a vector-field expressed in terms Euclidean coordinates, the matrix representing the restriction of the energy in the frame coordinates is:
 <BLOCKQUOTE><CODE>P.transpose()*Q*P</CODE></BLOCKQUOTE>
 <LI>Given a <code>2&middot;|V|</code>-dimensional vector <code>v</code> describing the tangent-vectors at the vertices, with respect to the frame, the vector representing the prolonged tangent-vectors in Euclidean coordinates is:
 <BLOCKQUOTE><CODE>P*v</CODE></BLOCKQUOTE>
-<LI>Given a <code>3&middot;|V|</code>-dimensional vector <code>d</code> describing the dual of a vector-field with respect to the Euclidean Phong-Rodrigues basis (i.e. the integral of the vector-field against each of the <code>3&middot;|V|</code> basis vector-fields), the vector representing the restriction of the dual to the tangent Phong-Rodrigues basis is:
+<LI>Given a <code>3&middot;|V|</code>-dimensional vector <code>d</code> describing the dual of a vector-field with respect to the Euclidean Phong-Rodrigues basis (i.e. the integral of the vector-field against each of the <code>3&middot;|V|</code> basis vector-fields), the vector representing the restriction of the dual to the Phong-Rodrigues basis associated with the frame is:
 <BLOCKQUOTE><CODE>P.transpose()*d</CODE></BLOCKQUOTE>
 <LI>Finally, because the implementation defines the prolongation matrix <code>P</code> using an orthonormal frame, given a <code>3&middot;|V|</code>-dimensional vector <code>v</code> describing the tangent-vectors at the vertices in Euclidean coordinates the representation of the tangent-vectors with respect to the frame is:
 <BLOCKQUOTE><CODE>P*v</CODE></BLOCKQUOTE>
