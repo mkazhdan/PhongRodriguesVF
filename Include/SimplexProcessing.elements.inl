@@ -155,14 +155,13 @@ auto ScalarSystem< K >::StiffnessMatrix( const Point< double , N > vertices[K+1]
 // PhongRodriguesSystem::Elements //
 ////////////////////////////////////
 template< unsigned int K , unsigned int N >
-template< bool Modulate >
-PhongRodriguesSystem< K , N >::_Elements< Modulate >::_Elements( const Point< double , N > normals[K+1] )
+PhongRodriguesSystem< K , N >::Elements::Elements( const Point< double , N > normals[K+1] )
 {
 	Point< double , N > vf[K+1];
 	for( unsigned int e=0 , k=0 ; k<=K ; k++ ) for( unsigned int n=0 ; n<N ; n++ , e++ )
 	{
 		vf[k][n] = 1;
-		_f[e] = PhongRodriguesVectorField< K , N , Modulate >( normals , vf );
+		_f[e] = PhongRodriguesVectorField< K , N >( normals , vf );
 		vf[k][n] = 0;
 	}
 }

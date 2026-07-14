@@ -134,17 +134,13 @@ namespace MishaK
 			/////////////////////////////////////////////////////
 			// Phong-Rodrigues extrinsic vector-field elements //
 			/////////////////////////////////////////////////////
-			template< bool Modulate >
-			struct _Elements
+			struct Elements
 			{
-				_Elements( const Point< double , N > n[K+1] );
-				PhongRodriguesVectorField< K , N , Modulate > operator[]( size_t k ) const { return _f[k]; }
+				Elements( const Point< double , N > n[K+1] );
+				PhongRodriguesVectorField< K , N > operator[]( size_t k ) const { return _f[k]; }
 			protected:
-				PhongRodriguesVectorField< K , N , Modulate > _f[NumElements];
+				PhongRodriguesVectorField< K , N > _f[NumElements];
 			};
-
-			using Elements = _Elements< true >;
-			using UnomdulatedElements = _Elements< false >;
 
 			//////////////////////////
 			// Vector functionality //
@@ -156,6 +152,10 @@ namespace MishaK
 
 			template< HasSimplexFunction< K , Point< double , N > > VectorField , bool MeasureScale=true , HasSimplexFunction< K , SquareMatrix< double , N > > InnerProductField=IdentityField< K , N > >
 			static auto MassVector( const Simplex< double , N , K > & vertices , const Simplex< double , N , K > & normals , const VectorField & VF , InnerProductField && IP=IdentityField< K , N >() ){ return MassVector< VectorField , MeasureScale >( &vertices[0] , &normals[0] , VF , std::forward< InnerProductField >( IP ) ); }
+
+			//////////////////////////
+			// Matrix functionality //
+			//////////////////////////
 
 			// Returns the functionality for computing the mass matrix
 			template< bool MeasureScale=true , HasSimplexFunction< K , SquareMatrix< double , N > > InnerProductField=IdentityField< K , N > >
