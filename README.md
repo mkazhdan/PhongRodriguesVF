@@ -210,9 +210,9 @@ which returns a sparse <code>3&middot;|V|&times;2&middot;|V|</code> matrix mappi
 <UL>
 <LI>Given a symmetric <code>3&middot;|V|&times;2&middot;|V|</code> matrix <CODE>Q</CODE> describing the energy of a vector-field expressed in terms Euclidean coordinates, the matrix representing the restriction of the energy to tangent-vectors is:
 <BLOCKQUOTE><CODE>P.transpose()*Q*P</CODE></BLOCKQUOTE>
-<LI>Given a <code>2&middot;|V|</code>-dimensional vector <code>v</code> describing the tangent-vectors at the vertices, with respect to the frame, the representation of the tangent-vectors in terms of Euclidean coordinates is:
+<LI>Given a <code>2&middot;|V|</code>-dimensional vector <code>v</code> describing the tangent-vectors at the vertices, with respect to the frame, the vector representing the prolonged tangent-vectors in Euclidean coordinates is:
 <BLOCKQUOTE><CODE>P*v</CODE></BLOCKQUOTE>
-<LI>Given a <code>3&middot;|V|</code>-dimensional vector <code>d</code> describing the dual of a vector-field with respect to the Euclidean Phong-Rodrigues basis (i.e. the integral of the vector-field against each of the <code>3&middot;|V|</code> basis vector-fields), the dual representation with respect to the tangent Phong-Rodrigues basis is:
+<LI>Given a <code>3&middot;|V|</code>-dimensional vector <code>d</code> describing the dual of a vector-field with respect to the Euclidean Phong-Rodrigues basis (i.e. the integral of the vector-field against each of the <code>3&middot;|V|</code> basis vector-fields), the vector representing the restriction of the dual to the tangent Phong-Rodrigues basis is:
 <BLOCKQUOTE><CODE>P.transpose()*d</CODE></BLOCKQUOTE>
 <LI>Finally, because the implementation defines the prolongation matrix <code>P</code> using an orthonormal frame, given a <code>3&middot;|V|</code>-dimensional vector <code>v</code> describing the tangent-vectors at the vertices in Euclidean coordinates the representation of the tangent-vectors with respect to the frame is:
 <BLOCKQUOTE><CODE>P*v</CODE></BLOCKQUOTE>
