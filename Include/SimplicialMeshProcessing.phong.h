@@ -33,24 +33,17 @@ namespace MishaK
 {
 	namespace SimplicialMesh
 	{
-		enum struct CovariantComponent
-		{
-			Total ,
-			Trace ,
-			Traceless ,
-			Symmetric ,
-			AntiSymmetric ,
-			Hodge
-		};
-		inline static const std::vector< std::string > CovariantComponentNames = { "total" , "trace" , "trace-less" , "symmetric" , "anti-symmetric" , "hodge" };
-
 		template< unsigned int K >
 		struct EmbeddedPhongMesh : public RiemannianMesh< K , EmbeddedPhongMesh< K > >
 		{
 			static const unsigned int Dim = K+1;
 			using Scalar = double;
 			using Vector = Point< double , Dim >;
-			using EigenMatrixEntries = SystemIntegration::EigenMatrixEntries< SimplexProcessing::PhongRodriguesVectorElements< K , Dim >::NumElements >;
+			using EigenMatrixEntries = SystemIntegration::EigenMatrixEntries< SimplexProcessing::PhongRodriguesSystem< K , Dim >::NumElements >;
+#ifdef USING_GCC
+			using SystemVector = Point< double , SimplexProcessing::PhongRodriguesSystem< K , Dim >::NumElements >;
+			using SystemMatrix = SquareMatrix< double , SimplexProcessing::PhongRodriguesSystem< K , Dim >::NumElements >;
+#endif // USING_GCC
 
 			using RiemannianMesh< K , EmbeddedPhongMesh< K > >::       metricTensorField;
 			using RiemannianMesh< K , EmbeddedPhongMesh< K > >::inverseMetricTensorField;
@@ -94,46 +87,62 @@ namespace MishaK
 			auto elements( void ) const;
 
 			template< SimplexProcessing::HasFunction< std::pair< size_t , Point< double , K > > , size_t > SampleFunctor >
-			Eigen::SparseMatrix< double > evaluation( size_t sampleNum , SampleFunctor && sampleFunctor ) const;
+			Eigen::SparseMatrix< double > evaluationMatrix( size_t sampleNum , SampleFunctor && sampleFunctor ) const;
 
 
-			template< unsigned int QuadratureSamples , HasMeshFunctionOrDifferentialFunction< K , typename EmbeddedPhongMesh< K >::Vector > VectorOrVectorDifferentialField >
-			Eigen::VectorXd dual( VectorOrVectorDifferentialField && F ) const;
+#ifdef USING_GCC
+			template< unsigned int QuadratureSamples , HasMeshFunction< K , typename EmbeddedPhongMesh< K >::SystemVector > SystemVectorField , HasMeshScaleFactorFunction< K > WeightField=UnitWeightField< K > >
+#else // !USING_GCC
+			template< unsigned int QuadratureSamples , HasMeshFunction< K , Point< double , SimplexProcessing::PhongRodriguesSystem< K , EmbeddedPhongMesh< K >::Dim >::NumElements > > SystemVectorField , HasMeshScaleFactorFunction< K > WeightField=UnitWeightField< K > >
+#endif // USING_GCC
+			Eigen::VectorXd systemVector( SystemVectorField && Sys , WeightField && WF=UnitWeightField< K >() ) const;
 
-			template< unsigned int QuadratureSamples >
-			Eigen::SparseMatrix< double > mass( void ) const;
+#ifdef USING_GCC
+			template< unsigned int QuadratureSamples , HasMeshFunction< K , typename EmbeddedPhongMesh< K >::SystemMatrix > SystemMatrixField , HasMeshScaleFactorFunction< K > WeightField=UnitWeightField< K > >
+#else // !USING_GCC
+			template< unsigned int QuadratureSamples , HasMeshFunction< K , SquareMatrix< double , SimplexProcessing::PhongRodriguesSystem< K , EmbeddedPhongMesh< K >::Dim >::NumElements > > SystemMatrixField , HasMeshScaleFactorFunction< K > WeightField=UnitWeightField< K > >
+#endif // USING_GCC
+			Eigen::SparseMatrix< double > systemMatrix( SystemMatrixField && Sys , WeightField && WF=UnitWeightField< K >() ) const;
 
-			template< unsigned int QuadratureSamples >
-			Eigen::SparseMatrix< double > stiffness( void ) const;
+			template< unsigned int QuadratureSamples , HasMeshFunction< K , typename EmbeddedPhongMesh< K >::Vector > VectorField , HasMeshScaleFactorFunction< K > WeightField=UnitWeightField< K > >
+			Eigen::VectorXd massVector( VectorField && F , WeightField && WF=UnitWeightField< K >() ) const;
 
-			template< unsigned int QuadratureSamples , CovariantComponent CComponent >
-			Eigen::SparseMatrix< double > stiffness( void ) const;
+			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField=UnitWeightField< K > >
+			Eigen::SparseMatrix< double > massMatrix( WeightField && WF=UnitWeightField< K >() ) const;
 
-			template< unsigned int QuadratureSamples , HasMeshFunctionOrDifferentialFunction< K , typename EmbeddedPhongMesh< K >::Vector > VectorOrVectorDifferentialField , HasMeshScaleFactorFunction< K > WeightField >
-			Eigen::VectorXd weightedDual( VectorOrVectorDifferentialField && F , WeightField && WF ) const;
+			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField=UnitWeightField< K > >
+			Eigen::SparseMatrix< double > stiffnessMatrix( WeightField && WF=UnitWeightField< K >() ) const;
 
-			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField >
-			Eigen::SparseMatrix< double > weightedMass( WeightField && WF ) const;
-
-			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField >
-			Eigen::SparseMatrix< double > weightedStiffness( WeightField && WF ) const;
-
-			template< unsigned int QuadratureSamples , CovariantComponent CComponent , HasMeshScaleFactorFunction< K > WeightField >
-			Eigen::SparseMatrix< double > weightedStiffness( WeightField && WF ) const;
-
-			template< unsigned int QuadratureSamples , typename SystemField >
-			Eigen::SparseMatrix< double > system( SystemField && Sys , bool needsScaling=true ) const;
+			template< unsigned int QuadratureSamples , unsigned int Components , HasMeshScaleFactorFunction< K > WeightField=UnitWeightField< K > >
+			Eigen::SparseMatrix< double > stiffnessMatrix( WeightField && WF=UnitWeightField< K >() ) const;
 
 			EigenMatrixEntries eigenMatrixEntries( void ) const { return this->template _eigenMatrixEntries< (K+1)*Dim >( _vertices.size()*Dim , elementIndex() ); }
 
-			template< unsigned int QuadratureSamples , typename SystemField >
-			void setSystemEntries( EigenMatrixEntries & eme , SystemField && Sys ) const;
+#ifdef USING_GCC
+			template< unsigned int QuadratureSamples , HasMeshFunction< K , typename EmbeddedPhongMesh< K >::SystemMatrix > SystemField >
+#else // !USING_GCC
+			template< unsigned int QuadratureSamples , HasMeshFunction< K , SquareMatrix< double , SimplexProcessing::PhongRodriguesSystem< K , EmbeddedPhongMesh< K >::Dim >::NumElements > > SystemField >
+#endif // USING_GCC
+			void setSystemMatrixEntries( EigenMatrixEntries & eme , SystemField && Sys ) const;
 
 			Eigen::SparseMatrix< double > J( void ) const requires( K==2 );
 
 			Eigen::SparseMatrix< double > tangentProlongation( void ) const;
 
 		protected:
+#ifdef USING_GCC
+			template< unsigned int QuadratureSamples , HasMeshFunction< K , typename EmbeddedPhongMesh< K >::SystemVector > SystemVectorField , HasMeshScaleFactorFunction< K > WeightField >
+#else // !USING_GCC
+			template< unsigned int QuadratureSamples , HasMeshFunction< K , Point< double , SimplexProcessing::PhongRodriguesSystem< K , EmbeddedPhongMesh< K >::Dim >::NumElements > > SystemVectorField , HasMeshScaleFactorFunction< K > WeightField >
+#endif // USING_GCC
+			Eigen::VectorXd _systemVector( SystemVectorField && Sys , bool needsScaling , WeightField && WF ) const;
+
+#ifdef USING_GCC
+			template< unsigned int QuadratureSamples , HasMeshFunction< K , typename EmbeddedPhongMesh< K >::SystemMatrix > SystemMatrixField , HasMeshScaleFactorFunction< K > WeightField >
+#else // !USING_GCC
+			template< unsigned int QuadratureSamples , HasMeshFunction< K , SquareMatrix< double , SimplexProcessing::PhongRodriguesSystem< K , EmbeddedPhongMesh< K >::Dim >::NumElements > > SystemMatrixField , HasMeshScaleFactorFunction< K > WeightField >
+#endif // USING_GCC
+			Eigen::SparseMatrix< double > _systemMatrix( SystemMatrixField && Sys , bool needsScaling , WeightField && WF ) const;
 
 			std::vector< Point< double , Dim > > &_vertices;
 			std::vector< SimplexIndex< K > > &_simplices;

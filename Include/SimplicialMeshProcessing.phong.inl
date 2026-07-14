@@ -101,14 +101,14 @@ auto EmbeddedPhongMesh< K >::elements( void ) const
 		{
 			Point< double , Dim > n[K+1];
 			for( unsigned int k=0 ; k<=K ; k++ ) n[k] = _normals[ _simplices[s][k] ];
-			return SimplexProcessing::PhongRodriguesVectorElements< K , Dim >( n ); 
+			return SimplexProcessing::PhongRodriguesSystem< K , Dim >::Elements( n ); 
 		}
 	);
 }
 
 template< unsigned int K >
 template< SimplexProcessing::HasFunction< std::pair< size_t , Point< double , K > > , size_t > SampleFunctor >
-Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::evaluation( size_t sampleNum , SampleFunctor && sampleFunctor ) const
+Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::evaluationMatrix( size_t sampleNum , SampleFunctor && sampleFunctor ) const
 {
 	std::vector< Eigen::Triplet< double , size_t > > triplets( sampleNum * (K+1)*(K+1) * Dim );
 
@@ -121,7 +121,7 @@ Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::evaluation( size_t sampleN
 			std::pair< size_t , Point< double , K > > sample = sampleFunctor( s );
 			Point< double , Dim > n[K+1];
 			for( unsigned int k=0 ; k<=K ; k++ ) n[k] = _normals[ _simplices[sample.first][k] ];
-			SimplexProcessing::PhongRodriguesVectorElements< K , Dim > elements( n );
+			typename SimplexProcessing::PhongRodriguesSystem< K , Dim >::Elements elements( n );
 
 			for( unsigned int e=0 ; e<(K+1)*(K+1) ; e++ )
 			{
@@ -139,209 +139,98 @@ Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::evaluation( size_t sampleN
 }
 
 template< unsigned int K >
-template< unsigned int QuadratureSamples , HasMeshFunctionOrDifferentialFunction< K , typename EmbeddedPhongMesh< K >::Vector > VectorOrVectorDifferentialField >
-Eigen::VectorXd EmbeddedPhongMesh< K >::dual( VectorOrVectorDifferentialField && F ) const
+#ifdef USING_GCC
+template< unsigned int QuadratureSamples , HasMeshFunction< K , typename EmbeddedPhongMesh< K >::SystemVector > SystemVectorField , HasMeshScaleFactorFunction< K > WeightField >
+#else // !USING_GCC
+template< unsigned int QuadratureSamples , HasMeshFunction< K , Point< double , SimplexProcessing::PhongRodriguesSystem< K , EmbeddedPhongMesh< K >::Dim >::NumElements > > SystemVectorField , HasMeshScaleFactorFunction< K > WeightField >
+#endif // USING_GCC
+Eigen::VectorXd EmbeddedPhongMesh< K >::_systemVector( SystemVectorField && Sys , bool needsScaling , WeightField && WF ) const
 {
-	return this->template _dual< QuadratureSamples , (K+1)*Dim , Vector >( _vertices.size()*Dim , elements() , std::forward< VectorOrVectorDifferentialField >( F ) , elementIndex() );
-}
-
-template< unsigned int K >
-template< unsigned int QuadratureSamples , HasMeshFunctionOrDifferentialFunction< K , typename EmbeddedPhongMesh< K >::Vector > VectorOrVectorDifferentialField , HasMeshScaleFactorFunction< K > WeightField >
-Eigen::VectorXd EmbeddedPhongMesh< K >::weightedDual( VectorOrVectorDifferentialField && F , WeightField && WF ) const
-{
-	return this->template _weightedDual< QuadratureSamples , (K+1)*Dim , Vector >( _vertices.size()*Dim , elements() , std::forward< VectorOrVectorDifferentialField >( F ) , elementIndex() , std::forward< WeightField >( WF ) );
-}
-
-template< unsigned int K >
-template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField >
-Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::weightedMass( WeightField && WF ) const
-{
-	return this->template _weightedMass< QuadratureSamples , (K+1)*Dim , Vector >( _vertices.size()*Dim , elements() , elementIndex() , std::forward< WeightField >( WF ) );
-}
-
-template< unsigned int K >
-template< unsigned int QuadratureSamples >
-Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::mass( void ) const
-{
-	return this->template _mass< QuadratureSamples , (K+1)*Dim , Vector >( _vertices.size()*Dim , elements() , elementIndex() );
-}
-
-template< unsigned int K >
-template< unsigned int QuadratureSamples , typename SystemField >
-Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::system( SystemField && Sys , bool needsScaling ) const
-{
-	return this->template _system< QuadratureSamples , (K+1)*Dim , Vector >( _vertices.size()*Dim , elements() , elementIndex() , std::forward< SystemField >( Sys ) , needsScaling );
-}
-
-template< unsigned int K >
-template< unsigned int QuadratureSamples , typename SystemField >
-void EmbeddedPhongMesh< K >::setSystemEntries( EigenMatrixEntries &eme , SystemField && Sys ) const
-{
-	this->template _setSystemEntries< QuadratureSamples , (K+1)*Dim , Vector >( eme , elements() , std::forward< SystemField >( Sys ) );
-}
-
-template< unsigned int K >
-template< unsigned int QuadratureSamples >
-Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::stiffness( void ) const
-{
-	// Represent the covariant derivative as a map from TM -> T^*M
-	static const unsigned int NumE = SimplexProcessing::PhongRodriguesVectorElements< K , Dim >::NumElements;
-
-	auto Sys = [&]( size_t sIdx )
-		{
-			return [tN=this->normalField(sIdx),tG=this->metricTensorField(sIdx),tS=this->measureScaleField(sIdx)]( SimplexProcessing::Position< K > p )
-				{
-					return [tn=tN(p),g=tG(p),s=tS(p)]( const SimplexProcessing::Differential< K , Vector > D[] )
-						{
-							SquareMatrix< double , K > _gAdj = g.adjugate() / s;
-							Matrix< double , K , Dim > cov[ NumE ];
-							for( unsigned int n=0 ; n<NumE ; n++ ) for( unsigned int k=0 ; k<K ; k++ )
-							{
-								Point< double , Dim > _D = D[n][k] - tn * Point< double , Dim >::Dot( D[n][k] , tn );
-								for( unsigned int d=0 ; d<Dim ; d++ ) cov[n](k,d) = _D[d];
-							}
-
-							SquareMatrix< double , NumE > mass;
-							// The inner product of two maps M,N: TM -> R^d is
-							//		<M,N> = tr( ( gInv * N.transpose() * M );
-							for( unsigned int n=0 ; n<NumE ; n++ ) for( unsigned int m=0 ; m<NumE ; m++ )
-								mass(n,m) = SquareMatrix< double , K >::Trace( _gAdj * cov[n].transpose() * cov[m] );
-							return mass;
-						};
-				};
-		};
-	return this->template system< QuadratureSamples >( SimplexProcessing::ArrayWrapper( Sys ) , false );
-}
-
-template< unsigned int K >
-template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField >
-Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::weightedStiffness( WeightField && WF ) const
-{
-	// Represent the covariant derivative as a map from TM -> T^*M
-	static const unsigned int NumE = SimplexProcessing::PhongRodriguesVectorElements< K , Dim >::NumElements;
-
-	auto Sys = [&]( size_t sIdx )
-		{
-			return [tN=this->normalField(sIdx),tG=this->metricTensorField(sIdx),tS=this->measureScaleField(sIdx),tWF=WF[sIdx]]( SimplexProcessing::Position< K > p )
-				{
-					return [tn=tN(p),g=tG(p),s=tS(p),w=tWF(p)]( const SimplexProcessing::Differential< K , Vector > D[] )
-						{
-							SquareMatrix< double , K > _gAdj = g.adjugate() / s;
-							Matrix< double , K , Dim > cov[ NumE ];
-							for( unsigned int n=0 ; n<NumE ; n++ ) for( unsigned int k=0 ; k<K ; k++ )
-							{
-								Point< double , Dim > _D = D[n][k] - tn * Point< double , Dim >::Dot( D[n][k] , tn );
-								for( unsigned int d=0 ; d<Dim ; d++ ) cov[n](k,d) = _D[d];
-							}
-
-							SquareMatrix< double , NumE > mass;
-							// The inner product of two maps M,N: TM -> R^d is
-							//		<M,N> = tr( ( gInv * N.transpose() * M );
-							for( unsigned int n=0 ; n<NumE ; n++ ) for( unsigned int m=0 ; m<NumE ; m++ )
-								mass(n,m) = SquareMatrix< double , K >::Trace( _gAdj * cov[n].transpose() * cov[m] );
-							return mass * w;
-						};
-				};
-		};
-	return this->template system< QuadratureSamples >( SimplexProcessing::ArrayWrapper( Sys ) , false );
-}
-
-template< unsigned int K >
-template< unsigned int QuadratureSamples , CovariantComponent CComponent >
-Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::stiffness( void ) const
-{
-	// Represent the covariant derivative as a map from TM -> T^*M
-	static const unsigned int NumE = SimplexProcessing::PhongRodriguesVectorElements< K , Dim >::NumElements;
-
-	auto Sys = [&]( size_t sIdx )
+	if constexpr( std::same_as< WeightField , UnitWeightField< K > > )
+		return RiemannianMesh< K , EmbeddedPhongMesh< K > >::template _systemVector< QuadratureSamples , SimplexProcessing::PhongRodriguesSystem< K , Dim >::NumElements >( _vertices.size()*Dim , elementIndex() , std::forward< SystemVectorField >( Sys ) , needsScaling );
+	else
 	{
-		return [tI2E=SimplexProcessing::PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >( simplexVertices(sIdx) , simplexNormals(sIdx) ),tG=this->metricTensorField(sIdx),tS=this->measureScaleField(sIdx)]( SimplexProcessing::Position< K > p )
-		{
-				return [i2e=tI2E(p),g=tG(p),s=tS(p)]( const SimplexProcessing::Differential< K , Vector > d[] )
-			{
-				SquareMatrix< double , K > _gAdj = g.adjugate() / s , _g = g / s;
-				SquareMatrix< double , K > cov[ NumE ] , sym[ NumE ] , aSym[ NumE ] , trace[ NumE ];
-				Point< double , K > e;
-				for( unsigned int n=0 ; n<NumE ; n++ )
-				{
-					for( unsigned int k=0 ; k<K ; k++ )
-					{
-						e[k] = 1.;
-						Point< double , Dim > _d = i2e * e;
-						for( unsigned int _k=0 ; _k<K ; _k++ ) cov[n](k,_k) = Point< double , Dim >::Dot( _d , d[n][_k] );
-						e[k] = 0.;
-					}
-
-					if constexpr( CComponent==CovariantComponent::AntiSymmetric || CComponent==CovariantComponent::Hodge     )  aSym[n] = ( cov[n] - cov[n].transpose() ) / 2.;
-					if constexpr( CComponent==CovariantComponent::Symmetric     || CComponent==CovariantComponent::Traceless )   sym[n] = ( cov[n] + cov[n].transpose() ) / 2.;
-					if constexpr( CComponent==CovariantComponent::Trace         || CComponent==CovariantComponent::Traceless || CComponent==CovariantComponent::Hodge ) trace[n] = _g * ( _gAdj * cov[n] ).trace() / 2.;
-				}
-
-				SquareMatrix< double , NumE > mass;
-				// The inner product of two maps M,N: TM -> T^*M is
-				//		<M,N> = tr( ( gInv * ( gInv * N ).transpose() * g * ( gInv * M ) );
-				//            = tr( ( gInv * N.transpose() * gInv * M );
-				for( unsigned int n=0 ; n<NumE ; n++ ) for( unsigned int m=0 ; m<NumE ; m++ )
-					if      constexpr( CComponent==CovariantComponent::Symmetric     ) mass(n,m) = SquareMatrix< double , K >::Trace( _gAdj *   sym[n].transpose() * _gAdj *   sym[m] );
-					else if constexpr( CComponent==CovariantComponent::AntiSymmetric ) mass(n,m) = SquareMatrix< double , K >::Trace( _gAdj *  aSym[n].transpose() * _gAdj *  aSym[m] );
-					else if constexpr( CComponent==CovariantComponent::Trace         ) mass(n,m) = SquareMatrix< double , K >::Trace( _gAdj * trace[n].transpose() * _gAdj * trace[m] );
-					else if constexpr( CComponent==CovariantComponent::Traceless     ) mass(n,m) = SquareMatrix< double , K >::Trace( _gAdj *   sym[n].transpose() * _gAdj *   sym[m] ) - SquareMatrix< double , K >::Trace( _gAdj * trace[n].transpose() * _gAdj * trace[m] );
-					else if constexpr( CComponent==CovariantComponent::Hodge         ) mass(n,m) = SquareMatrix< double , K >::Trace( _gAdj * trace[n].transpose() * _gAdj * trace[m] ) + SquareMatrix< double , K >::Trace( _gAdj *  aSym[n].transpose() * _gAdj *  aSym[m] );
-					else                                                               mass(n,m) = SquareMatrix< double , K >::Trace( _gAdj *   cov[n].transpose() * _gAdj *   cov[m] );
-				return mass / s;
-			};
-		};
-	};
-	return this->template system< QuadratureSamples >( SimplexProcessing::ArrayWrapper( Sys ) , false );
+		auto WeightedSys = ScaledField< K >( std::forward< WeightField >( WF ) , std::forward< SystemVectorField >( Sys ) ); 
+		return RiemannianMesh< K , EmbeddedPhongMesh< K > >::template _systemVector< QuadratureSamples , SimplexProcessing::PhongRodriguesSystem< K , Dim >::NumElements >( _vertices.size()*Dim , elementIndex() , WeightedSys , needsScaling );
+	}
 }
 
 template< unsigned int K >
-template< unsigned int QuadratureSamples , CovariantComponent CComponent , HasMeshScaleFactorFunction< K > WeightField >
-Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::weightedStiffness( WeightField && WF ) const
+#ifdef USING_GCC
+template< unsigned int QuadratureSamples , HasMeshFunction< K , typename EmbeddedPhongMesh< K >::SystemMatrix > SystemMatrixField , HasMeshScaleFactorFunction< K > WeightField >
+#else // !USING_GCC
+template< unsigned int QuadratureSamples , HasMeshFunction< K , SquareMatrix< double , SimplexProcessing::PhongRodriguesSystem< K , EmbeddedPhongMesh< K >::Dim >::NumElements > > SystemMatrixField , HasMeshScaleFactorFunction< K > WeightField >
+#endif // USING_GCC
+Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::_systemMatrix( SystemMatrixField && Sys , bool needsScaling , WeightField && WF ) const
 {
-	// Represent the covariant derivative as a map from TM -> T^*M
-	static const unsigned int NumE = SimplexProcessing::PhongRodriguesVectorElements< K , Dim >::NumElements;
+	if constexpr( std::same_as< WeightField , UnitWeightField< K > > )
+		return RiemannianMesh< K , EmbeddedPhongMesh< K > >::template _systemMatrix< QuadratureSamples , SimplexProcessing::PhongRodriguesSystem< K , Dim >::NumElements >( _vertices.size()*Dim , elementIndex() , std::forward< SystemMatrixField >( Sys ) , needsScaling );
+	else
+	{
+		auto WeightedSys = ScaledField< K >( std::forward< WeightField >( WF ) , std::forward< SystemMatrixField >( Sys ) ); 
+		return RiemannianMesh< K , EmbeddedPhongMesh< K > >::template _systemMatrix< QuadratureSamples , SimplexProcessing::PhongRodriguesSystem< K , Dim >::NumElements >( _vertices.size()*Dim , elementIndex() , WeightedSys , needsScaling );
+	}
+}
 
-	auto Sys = [&]( size_t sIdx )
-		{
-			return [tI2E=SimplexProcessing::PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >(simplexVertices(sIdx),simplexNormals(sIdx)),tG=this->metricTensorField(sIdx),tS=this->measureScaleField(sIdx),tWF=WF[sIdx]]( SimplexProcessing::Position< K > p )
-				{
-					return [i2e=tI2E(p),g=tG(p),s=tS(p),w=tWF(p)]( const SimplexProcessing::Differential< K , Vector > d[] )
-						{
-							SquareMatrix< double , K > _gAdj = g.adjugate() / s , _g = g / s;
-							SquareMatrix< double , K > cov[ NumE ] , sym[ NumE ] , aSym[ NumE ] , trace[ NumE ];
-							Point< double , K > e;
-							for( unsigned int n=0 ; n<NumE ; n++ )
-							{
-								for( unsigned int k=0 ; k<K ; k++ )
-								{
-									e[k] = 1.;
-									Point< double , Dim > _d = i2e * e;
-									for( unsigned int _k=0 ; _k<K ; _k++ ) cov[n](k,_k) = Point< double , Dim >::Dot( _d , d[n][_k] );
-									e[k] = 0.;
-								}
+template< unsigned int K >
+#ifdef USING_GCC
+template< unsigned int QuadratureSamples , HasMeshFunction< K , typename EmbeddedPhongMesh< K >::SystemVector > SystemVectorField , HasMeshScaleFactorFunction< K > WeightField >
+#else // !USING_GCC
+template< unsigned int QuadratureSamples , HasMeshFunction< K , Point< double , SimplexProcessing::PhongRodriguesSystem< K , EmbeddedPhongMesh< K >::Dim >::NumElements > > SystemVectorField , HasMeshScaleFactorFunction< K > WeightField >
+#endif // USING_GCC
+Eigen::VectorXd EmbeddedPhongMesh< K >::systemVector( SystemVectorField && Sys , WeightField && WF ) const
+{
+	return _systemVector< QuadratureSamples >( std::forward< SystemVectorField >( Sys ) , true , std::forward< WeightField >( WF ) );
+}
 
-								if constexpr( CComponent==CovariantComponent::AntiSymmetric || CComponent==CovariantComponent::Hodge     )  aSym[n] = ( cov[n] - cov[n].transpose() ) / 2.;
-								if constexpr( CComponent==CovariantComponent::Symmetric     || CComponent==CovariantComponent::Traceless )   sym[n] = ( cov[n] + cov[n].transpose() ) / 2.;
-								if constexpr( CComponent==CovariantComponent::Trace         || CComponent==CovariantComponent::Traceless || CComponent==CovariantComponent::Hodge ) trace[n] = _g * ( _gAdj * cov[n] ).trace() / 2.;
-							}
+template< unsigned int K >
+#ifdef USING_GCC
+template< unsigned int QuadratureSamples , HasMeshFunction< K , typename EmbeddedPhongMesh< K >::SystemMatrix > SystemMatrixField , HasMeshScaleFactorFunction< K > WeightField >
+#else // !USING_GCC
+template< unsigned int QuadratureSamples , HasMeshFunction< K , SquareMatrix< double , SimplexProcessing::PhongRodriguesSystem< K , EmbeddedPhongMesh< K >::Dim >::NumElements > > SystemMatrixField , HasMeshScaleFactorFunction< K > WeightField >
+#endif // USING_GCC
+Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::systemMatrix( SystemMatrixField && Sys , WeightField && WF ) const
+{
+	return _systemMatrix< QuadratureSamples >( std::forward< SystemMatrixField >( Sys ) , true , std::forward< WeightField >( WF ) );
+}
 
-							SquareMatrix< double , NumE > mass;
-							// The inner product of two maps M,N: TM -> T^*M is
-							//		<M,N> = tr( ( gInv * ( gInv * N ).transpose() * g * ( gInv * M ) );
-							//            = tr( ( gInv * N.transpose() * gInv * M );
-							for( unsigned int n=0 ; n<NumE ; n++ ) for( unsigned int m=0 ; m<NumE ; m++ )
-								if      constexpr( CComponent==CovariantComponent::Symmetric     ) mass(n,m) = SquareMatrix< double , K >::Trace( _gAdj *   sym[n].transpose() * _gAdj *   sym[m] );
-								else if constexpr( CComponent==CovariantComponent::AntiSymmetric ) mass(n,m) = SquareMatrix< double , K >::Trace( _gAdj *  aSym[n].transpose() * _gAdj *  aSym[m] );
-								else if constexpr( CComponent==CovariantComponent::Trace         ) mass(n,m) = SquareMatrix< double , K >::Trace( _gAdj * trace[n].transpose() * _gAdj * trace[m] );
-								else if constexpr( CComponent==CovariantComponent::Traceless     ) mass(n,m) = SquareMatrix< double , K >::Trace( _gAdj *   sym[n].transpose() * _gAdj *   sym[m] ) - SquareMatrix< double , K >::Trace( _gAdj * trace[n].transpose() * _gAdj * trace[m] );
-								else if constexpr( CComponent==CovariantComponent::Hodge         ) mass(n,m) = SquareMatrix< double , K >::Trace( _gAdj * trace[n].transpose() * _gAdj * trace[m] ) + SquareMatrix< double , K >::Trace( _gAdj *  aSym[n].transpose() * _gAdj *  aSym[m] );
-								else                                                               mass(n,m) = SquareMatrix< double , K >::Trace( _gAdj *   cov[n].transpose() * _gAdj *   cov[m] );
-							return mass * w / s;
-						};
-				};
-		};
-	return this->template system< QuadratureSamples >( SimplexProcessing::ArrayWrapper( Sys ) , false );
+template< unsigned int K >
+template< unsigned int QuadratureSamples , HasMeshFunction< K , typename EmbeddedPhongMesh< K >::Vector > VectorField , HasMeshScaleFactorFunction< K > WeightField >
+Eigen::VectorXd EmbeddedPhongMesh< K >::massVector( VectorField && F , WeightField && WF ) const
+{
+	return _systemVector< QuadratureSamples >( SimplexProcessing::ArrayWrapper( [&]( size_t sIdx ){ return SimplexProcessing::PhongRodriguesSystem< K , Dim >::MassVector( simplexVertices(sIdx) , simplexNormals(sIdx) , F[sIdx] ); } ) , false , std::forward< WeightField >( WF ) );
+}
+
+template< unsigned int K >
+template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField >
+Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::massMatrix( WeightField && WF ) const
+{
+	return _systemMatrix< QuadratureSamples >( SimplexProcessing::ArrayWrapper( [&]( size_t sIdx ){ return SimplexProcessing::PhongRodriguesSystem< K , Dim >::MassMatrix( simplexVertices(sIdx) , simplexNormals(sIdx) ); } ) , false , std::forward< WeightField >( WF ) );
+}
+
+template< unsigned int K >
+template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField >
+Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::stiffnessMatrix( WeightField && WF ) const
+{
+	return _systemMatrix< QuadratureSamples >( SimplexProcessing::ArrayWrapper( [&]( size_t sIdx ){ return SimplexProcessing::PhongRodriguesSystem< K , Dim >::StiffnessMatrix( simplexVertices(sIdx) , simplexNormals(sIdx) ); } ) , false , std::forward< WeightField >( WF ) );
+}
+
+template< unsigned int K >
+template< unsigned int QuadratureSamples , unsigned int Components , HasMeshScaleFactorFunction< K > WeightField >
+Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::stiffnessMatrix( WeightField && WF ) const
+{
+	return _systemMatrix< QuadratureSamples >( SimplexProcessing::ArrayWrapper( [&]( size_t sIdx ){ return SimplexProcessing::PhongRodriguesSystem< K , Dim >::template ComponentStiffnessMatrix< Components >( simplexVertices(sIdx) , simplexNormals(sIdx) ); } ) , false , std::forward< WeightField >( WF ) );
+}
+
+template< unsigned int K >
+#ifdef USING_GCC
+template< unsigned int QuadratureSamples , HasMeshFunction< K , typename EmbeddedPhongMesh< K >::SystemMatrix > SystemField >
+#else // !USING_GCC
+template< unsigned int QuadratureSamples , HasMeshFunction< K , SquareMatrix< double , SimplexProcessing::PhongRodriguesSystem< K , EmbeddedPhongMesh< K >::Dim >::NumElements > > SystemField >
+#endif // USING_GCC
+void EmbeddedPhongMesh< K >::setSystemMatrixEntries( EigenMatrixEntries & eme , SystemField && Sys ) const
+{
+	this->template _setSystemMatrixEntries< QuadratureSamples , SimplexProcessing::PhongRodriguesSystem< K , EmbeddedPhongMesh< K >::Dim >::NumElements >( eme , std::forward< SystemField >( Sys ) , true );
 }
 
 template< unsigned int K >

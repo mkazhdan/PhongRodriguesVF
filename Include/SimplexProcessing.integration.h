@@ -35,29 +35,6 @@ namespace MishaK
 	{
 		namespace SystemIntegration
 		{
-			// Functionality for constructing system constraints, expressed relative to the test functions
-			template< unsigned int K , unsigned int NumF , typename T , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexSystemVectorFunction< K , NumF , T > SystemVectors >
-			auto SystemVectorField( TestFunctions && Fs , SystemVectors && S );
-
-			template< unsigned int K , unsigned int NumF , typename T , HasSimplexFunction< K , T > Function , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexlinearMapFunction< K , T > LinearMaps >
-			auto SystemVectorField( Function && F , TestFunctions && Fs , LinearMaps && L );
-
-			template< unsigned int K , unsigned int NumF , typename T , HasSimplexFunction< K , T > Function , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexBilinearFormFunction< K , T > BilinearForms >
-				requires( !HasSimplexlinearMapFunction< BilinearForms , K , T > )
-			auto SystemVectorField( Function && F , TestFunctions && Fs , BilinearForms && B );
-
-			// Functionality for constructing system constraints, expressed relative to the test functions
-			template< unsigned int K , unsigned int NumF , typename T , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexSystemMatrixFunction< K , NumF , T > SystemMatrices >
-				requires( !HasSimplexlinearMapFunction< SystemMatrices , K , T > && !HasSimplexBilinearFormFunction< SystemMatrices , K , T > )
-			auto SystemMatrixField( TestFunctions && Fs , SystemMatrices && S );
-
-			template< unsigned int K , unsigned int NumF , typename T , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexlinearMapFunction< K , T > LinearMaps >
-			auto SystemMatrixField( TestFunctions && Fs , LinearMaps && L );
-
-			template< unsigned int K , unsigned int NumF , typename T , HasArrayOfSimplexFunctions< K , T > TestFunctions , HasSimplexBilinearFormFunction< K , T > BilinearForms >
-				requires( !HasSimplexlinearMapFunction< BilinearForms , K , T > )
-			auto SystemMatrixField( TestFunctions && Fs , BilinearForms && B );
-
 			// A dimension-templated wrapper for the segment/triangle/tet integrators
 			template< unsigned int K , unsigned int QuadratureSamples >
 			struct MCIntegrator /* : public Sample< Measure > */

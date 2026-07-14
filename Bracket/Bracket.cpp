@@ -93,7 +93,7 @@ std::vector< Point< double , Dim > > GetBracket( const EmbeddedPhongMesh< K > &m
 	Eigen::SparseMatrix< double > P = mesh.tangentProlongation();
 	Eigen::SparseMatrix< double > Pt = P.transpose();
 
-	Eigen::SparseMatrix< double > M = Pt * mesh.template mass< Quadrature >() * P;
+	Eigen::SparseMatrix< double > M = Pt * mesh.template massMatrix< Quadrature >() * P;
 	if( Verbose.set ) std::cout << "Got system matrices: " << timer() << std::endl;
 
 	LLtSolver solver( M );
@@ -101,11 +101,13 @@ std::vector< Point< double , Dim > > GetBracket( const EmbeddedPhongMesh< K > &m
 
 	// Compute the bracket/difference of covariant derivatives of the two vector fields and integrate against the Phong-Rodrigues vector-field basis
 	Eigen::VectorXd _Z;
-	if( CovariantDerivativeDifference.set ) _Z = mesh.template dual< Quadrature >( SimplicialMesh::PhongRodriguesCovariantDerivativeDifferenceField< K >( mesh , X , Y ) );
-	else                                    _Z = mesh.template dual< Quadrature >( SimplicialMesh::PhongRodriguesLieBracketField< K >( mesh , X , Y ) );
+	if( CovariantDerivativeDifference.set ) _Z = mesh.template massVector< Quadrature >( SimplicialMesh::PhongRodriguesCovariantDerivativeDifferenceField< K >( mesh , X , Y ) );
+	else                                    _Z = mesh.template massVector< Quadrature >( SimplicialMesh::PhongRodriguesLieBracketField< K >( mesh , X , Y ) );
 	if( Verbose.set )
+	{
 		if( CovariantDerivativeDifference.set ) std::cout << "Got difference of covariant derivatives: " << timer() << std::endl;
 		else                                    std::cout << "Got Lie bracket: " << timer() << std::endl;
+	}
 
 	// Compute the least-squares best-fit within the space spanned by the Phong-Rodrigues vector-field basis
 	_Z = P * solver.solve( Pt * _Z );

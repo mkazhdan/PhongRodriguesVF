@@ -93,6 +93,14 @@ namespace MishaK
 		template< unsigned int K , HasSimplexFunction< K , ScaleFactor > ScaleFactorField , HasSimplexInvocable< K > Field >
 		auto ScaledField( ScaleFactorField && SF , Field && F );
 
+		// Returns a function that evaluates to one everywhere on the simplex
+		template< unsigned int K >
+		struct UnitWeightField{ double operator()( Position< K > ) const; };
+
+		// Returns a function that evaluates to the identity matrix everywhere on the simplex
+		template< unsigned int K , unsigned int N >
+		struct IdentityField{ SquareMatrix< double , N > operator()( Position< K > ) const; };
+
 #include "SimplexProcessing.functions.inl"
 	}
 }

@@ -84,80 +84,20 @@ namespace MishaK
 			struct _HasMeasureScaleField< T , std::void_t< decltype( std::declval< T >().measureScaleField( std::declval< size_t >() ) ) > > : std::true_type {};
 
 
-			template< typename T , HasMeshScaleFactorFunction< K > ScaleFactorField /* = SimplexProcessing::Samples< SimplexProcessing::ScaleFactor > */ >
-			auto _scaledIdentityField( ScaleFactorField && S ) const;
-
-			template< typename T , HasMeshScaleFactorFunction< K > ScaleFactorField >
-			auto _scaledInverseMetricTensorField( ScaleFactorField && S ) const;
-
-			template< typename T , HasDifferentiableElements< K , T > Elements >
-			static auto _DifferentialElements( Elements && E );
-
-			template< typename T , HasElementsAndDifferentiableElements< K , T > Elements >
-			static auto _ValueAndDifferentialElements( Elements && E );
-
-
 			// Functionality for defining system vertices/matrices 
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasMeshFunction< K , T > ValueField , HasElements< K , T > Elements , HasElementIndexFunctor ElementIndex >
-			Eigen::VectorXd _dual( size_t fNum , Elements && E , ValueField && F , ElementIndex && Idx ) const;
-
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasMeshDifferentialFunction< K , T > DifferentialField , HasDifferentiableElements< K , T > Elements , HasElementIndexFunctor ElementIndex >
-			Eigen::VectorXd _dual( size_t fNum , Elements && E , DifferentialField && F , ElementIndex && Idx ) const;
-
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasElements< K , T > Elements , HasElementIndexFunctor ElementIndex >
-			Eigen::SparseMatrix< double > _mass( size_t fNum , Elements && E , ElementIndex && Idx ) const;
-
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasDifferentiableElements< K , T > Elements , HasElementIndexFunctor ElementIndex >
-			Eigen::SparseMatrix< double > _stiffness( size_t fNum , Elements && E , ElementIndex && Idx ) const;
-
-
-			// Functionality for defining weighted system vertices/matrices 
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasMeshFunction< K , T > ValueField , HasElements< K , T > Elements , HasElementIndexFunctor ElementIndex , HasMeshScaleFactorFunction< K > WeightField >
-			Eigen::VectorXd _weightedDual( size_t fNum , Elements && E , ValueField && F , ElementIndex && Idx , WeightField && WF ) const;
-
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasMeshDifferentialFunction< K , T > DifferentialField , HasDifferentiableElements< K , T > Elements , HasElementIndexFunctor ElementIndex , HasMeshScaleFactorFunction< K > WeightField >
-			Eigen::VectorXd _weightedDual( size_t fNum , Elements && E , DifferentialField && F , ElementIndex && Idx , WeightField && WF ) const;
-
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasElements< K , T > Elements , HasElementIndexFunctor ElementIndex , HasMeshScaleFactorFunction< K > WeightField >
-			Eigen::SparseMatrix< double > _weightedMass( size_t fNum , Elements && E , ElementIndex && Idx , WeightField && WF ) const;
-
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasDifferentiableElements< K , T > Elements , HasElementIndexFunctor ElementIndex , HasMeshScaleFactorFunction< K > WeightField >
-			Eigen::SparseMatrix< double > _weightedStiffness( size_t fNum , Elements && E , ElementIndex && Idx , WeightField && WF ) const;
-
-
-			// Functionality for defining system matrices 
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasElements< K , T > Elements , HasElementIndexFunctor ElementIndex , HasMeshSystemLinearMapOrBilinearFormFunction< K , NumElementsPerSimplex , T > SystemField >
-			Eigen::SparseMatrix< double > _system( size_t fNum , Elements && E , ElementIndex && Idx , SystemField && Sys , bool needsScaling ) const;
-
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasDifferentiableElements< K , T > Elements , HasElementIndexFunctor ElementIndex , HasMeshDSystemFunction< K , NumElementsPerSimplex , T > SystemField >
-			Eigen::SparseMatrix< double > _system( size_t fNum , Elements && E , ElementIndex && Idx , SystemField && Sys , bool needsScaling ) const;
-
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasElementsAndDifferentiableElements< K , T > Elements , HasElementIndexFunctor ElementIndex , HasMeshSystemAndDSystemFunction< K , NumElementsPerSimplex , T > SystemField >
-			Eigen::SparseMatrix< double > _system( size_t fNum , Elements && E , ElementIndex && Idx , SystemField && Sys , bool needsScaling ) const;
+			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , HasElementIndexFunctor ElementIndex , HasMeshFunction< K , Point< double , NumElementsPerSimplex > > SystemVectorField >
+			Eigen::VectorXd _systemVector( size_t fNum , ElementIndex && Idx , SystemVectorField && SVF , bool needsScaling ) const;
 
 			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , HasElementIndexFunctor ElementIndex , HasMeshFunction< K , SquareMatrix< double , NumElementsPerSimplex > > SystemField >
-			Eigen::SparseMatrix< double > _system( size_t fNum ,                 ElementIndex && Idx , SystemField && Sys , bool needsScaling ) const;
+			Eigen::SparseMatrix< double > _systemMatrix( size_t fNum , ElementIndex && Idx , SystemField && Sys , bool needsScaling ) const;
 
 
 			// Functionality for setting/resetting matrix entries
 			template< unsigned int NumElementsPerSimplex , HasElementIndexFunctor ElementIndex >
 			SystemIntegration::EigenMatrixEntries< NumElementsPerSimplex > _eigenMatrixEntries( size_t fNum , ElementIndex && Idx ) const;
 
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasElements< K , T > Elements , HasMeshSystemLinearMapOrBilinearFormFunction< K , NumElementsPerSimplex , T > SystemField >
-			void _setSystemEntries( SystemIntegration::EigenMatrixEntries< NumElementsPerSimplex > & eme , Elements && E , SystemField && Sys ) const;
-
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasDifferentiableElements< K , T > Elements , HasMeshDSystemFunction< K , NumElementsPerSimplex , T > SystemField >
-			void _setSystemEntries( SystemIntegration::EigenMatrixEntries< NumElementsPerSimplex > & eme , Elements && E , SystemField && Sys ) const;
-
-			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , typename T , HasElementsAndDifferentiableElements< K , T > Elements , HasMeshSystemAndDSystemFunction< K , NumElementsPerSimplex , T > SystemField >
-			void _setSystemEntries( SystemIntegration::EigenMatrixEntries< NumElementsPerSimplex > & eme , Elements && E , SystemField && Sys ) const;
-
 			template< unsigned int QuadratureSamples , unsigned int NumElementsPerSimplex , HasMeshFunction< K , SquareMatrix< double , NumElementsPerSimplex > > SystemField >
-			void _setSystemEntries( SystemIntegration::EigenMatrixEntries< NumElementsPerSimplex > & eme ,                 SystemField && Sys ) const;
-
-
-			template< unsigned int NumElementsPerSimplex , typename T , HasMeshTangentVectorFunction< K > TangentVectorField >
-			static auto _DerivationSystemField( TangentVectorField && VF );
+			void _setSystemMatrixEntries( SystemIntegration::EigenMatrixEntries< NumElementsPerSimplex > & eme , SystemField && Sys , bool needsScaling ) const;
 		};
 #include "SimplicialMeshProcessing.riemannian.inl"
 	}

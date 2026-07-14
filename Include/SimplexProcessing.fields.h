@@ -42,10 +42,10 @@ namespace MishaK
 		template< unsigned int K , HasDotProduct T >
 		struct DerivativeTester
 		{
-			template< HasSimplexFunctionAndFunctionDifferential< K , T > Field >
+			template< HasSimplexDifferentiableFunction< K , T > Field >
 			static double SquareError( Position< K > p , const Field & field , double delta );
 
-			template< HasSimplexFunctionAndFunctionDifferential< K , T > Field >
+			template< HasSimplexDifferentiableFunction< K , T > Field >
 			static double SquareError( const Field & field , unsigned int testCount , double delta );
 		};
 
@@ -57,14 +57,14 @@ namespace MishaK
 		{
 			struct Differential
 			{
-				Differential( const Field & f ) requires HasSimplexFunctionDifferential< Field , K , T > : _f(f){}
+				Differential( const Field & f ) requires HasSimplexDifferentiableFunction< Field , K , T > : _f(f){}
 				SimplexProcessing::Differential< K , T > operator()( Position< K > p ) const { return _f.d(p); }
 			protected:
 				const Field _f;
 			};
 
 			// Return a function evaluating the differential
-			Differential differential( void ) const requires HasSimplexFunctionDifferential< Field , K , T > { return Differential( static_cast< const Field & >( *this ) ); }
+			Differential differential( void ) const requires HasSimplexDifferentiableFunction< Field , K , T > { return Differential( static_cast< const Field & >( *this ) ); }
 		};
 
 		////////////////////////////////////////////////////
@@ -75,7 +75,7 @@ namespace MishaK
 		struct NormalizationField : public DifferentialFieldWrapper< K , T , NormalizationField< K , T , Field > >
 		{
 			static T Value( const Field & f , Position< K > p ){ return NormalizedValue( f(p) ); }
-			static Differential< K , T > DValue( const Field & f , Position< K > p  ) requires HasSimplexFunctionDifferential< Field , K , T > { return DNormalizedValue( f(p) , f.d(p) ); }
+			static Differential< K , T > DValue( const Field & f , Position< K > p  ) requires HasSimplexDifferentiableFunction< Field , K , T > { return DNormalizedValue( f(p) , f.d(p) ); }
 
 			// Constructor
 			NormalizationField( const Field & f ) : _f(f){}
@@ -84,7 +84,7 @@ namespace MishaK
 			T operator()( Position< K > p ) const { return Value( _f , p ); }
 
 			// Derivative evaluation
-			Differential< K , T > d( Position< K > p ) const requires HasSimplexFunctionDifferential< Field , K , T > { return DValue( _f , p ); }
+			Differential< K , T > d( Position< K > p ) const requires HasSimplexDifferentiableFunction< Field , K , T > { return DValue( _f , p ); }
 
 		protected:
 			Field _f;
@@ -248,10 +248,120 @@ namespace MishaK
 			using PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::_xForm;
 		};
 
+		//////////////////////////////////////
+		// The first fundamental form field //
+		//////////////////////////////////////
+		template< unsigned int K >
+		struct FirstFundamentalFormField
+		{
+			using T = SquareMatrix< double , K >;
+
+			template< unsigned int N >
+			static T Value( const Point< double , N > vertices[K+1] , Position< K > );
+
+			template< unsigned int N >
+			FirstFundamentalFormField( const Point< double , N > vertices[K+1] ) : _I( Value( vertices , Position< K >() ) ){}
+
+			template< unsigned int N >
+			FirstFundamentalFormField( const Simplex< double , N , K > & vertices ) : FirstFundamentalFormField( &vertices[0] ){}
+
+			// Given a simplex, returns a function returning the second fundamental form (expressed in the space of tangent vector fields) at any point in the simplex
+			T operator()( Position< K > ) const { return _I; }
+
+		protected:
+			T _I;
+		};
+
+		template< unsigned int K >
+		using MetricTensorField = FirstFundamentalFormField< K >;
+
+		/////////////////////////////////////////////
+		// The field returning the measure scaling //
+		/////////////////////////////////////////////
+		template< unsigned int K >
+		struct MeasureScaleField
+		{
+			using T = double;
+
+			static T Value( const SquareMatrix< double , K > & I ){ return sqrt( std::max< double >( 0 , I.determinant() ) ); }
+
+			template< unsigned int N >
+			static T Value( const Point< double , N > vertices[K+1] , Position< K > p ){ return Value(  FirstFundamentalFormField< K >::Value( vertices , p ) ); }
+
+			template< unsigned int N >
+			MeasureScaleField( const Point< double , N > vertices[K+1] ) : _mu( Value( vertices , Position< K >() ) ){}
+
+			template< unsigned int N >
+			MeasureScaleField( const Simplex< double , N , K > & vertices ) : MeasureScaleField( &vertices[0] ){}
+			// Given a simplex, returns a function returning the second fundamental form (expressed in the space of tangent vector fields) at any point in the simplex
+			T operator()( Position< K > ) const { return _mu; }
+
+		protected:
+			T _mu;
+		};
+
+		/////////////////////////////////////////////////////
+		// The inverse of the first fundamental form field //
+		/////////////////////////////////////////////////////
+		template< unsigned int K >
+		struct InverseFirstFundamentalFormField
+		{
+			using T = SquareMatrix< double , K >;
+
+			static T Value( const SquareMatrix< double , K > & I ){ return I.inverse(); }
+
+			template< unsigned int N >
+			static T Value( const Point< double , N > vertices[K+1] , Position< K > p ){ return Value( MetricTensorField< K >( vertices , p ) ); }
+
+			template< unsigned int N >
+			InverseFirstFundamentalFormField( const Point< double , N > vertices[K+1] ) : _Iinv( Value( vertices ) , Position< K >() ){}
+
+			template< unsigned int N >
+			InverseFirstFundamentalFormField( const Simplex< double , N , K > & vertices ) : InverseFirstFundamentalFormField( &vertices[0] ){}
+
+			// Given a simplex, returns a function returning the second fundamental form (expressed in the space of tangent vector fields) at any point in the simplex
+			T operator()( Position< K > ) const { return _Iinv; }
+
+		protected:
+			T _Iinv;
+		};
+
+		template< unsigned int K >
+		using InverseMetricTensorField = InverseFirstFundamentalFormField< K >;
+
+		////////////////////////////////////////////////////////////////////
+		// The measure-scaled inverse of the first fundamental form field //
+		////////////////////////////////////////////////////////////////////
+		template< unsigned int K >
+		struct MeasureScaledInverseFirstFundamentalFormField
+		{
+			using T = SquareMatrix< double , K >;
+
+			static T Value( const SquareMatrix< double , K > & I ){ return I.adjugate() / MeasureScaleField< K >::Value( I ); }
+
+			template< unsigned int N >
+			static T Value( const Point< double , N > vertices[K+1] , Position< K > p ){ return Value( MetricTensorField< K >::Value( vertices , p ) ); }
+
+			template< unsigned int N >
+			MeasureScaledInverseFirstFundamentalFormField( const Point< double , N > vertices[K+1] ) : _Iinv_scaled( Value( vertices , Position< K >() ) ){}
+
+			template< unsigned int N >
+			MeasureScaledInverseFirstFundamentalFormField( const Simplex< double , N , K > & vertices ) : MeasureScaledInverseFirstFundamentalFormField( &vertices[0] ){}
+
+			// Given a simplex, returns a function returning the second fundamental form (expressed in the space of tangent vector fields) at any point in the simplex
+			T operator()( Position< K > ) const { return _Iinv_scaled; }
+
+		protected:
+			T _Iinv_scaled;
+		};
+
+		template< unsigned int K >
+		using MeasureScaledInverseMetricTensorField = MeasureScaledInverseFirstFundamentalFormField< K >;
+
 		///////////////////////////////////////
 		// The second fundamental form field //
 		///////////////////////////////////////
-		template< unsigned int K , bool DifferentiateNormals=true >
+		template< unsigned int K , bool DifferentiateNormals=true , bool Symmetrize=false >
 		struct SecondFundamentalFormField : public PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >
 		{
 			static const unsigned int Dim = K+1;
@@ -280,7 +390,7 @@ namespace MishaK
 		////////////////////////////////////////////////////////////////////////////////////
 		// Coefficients of a GENERIC vector-field vector field w.r.t. the coordinate axes //
 		////////////////////////////////////////////////////////////////////////////////////
-		template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
+		template< unsigned int K , unsigned int N , HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField >
 		struct IntrinsicVectorField
 			: public DifferentialFieldWrapper< K , Point< double , K > , IntrinsicVectorField< K , N , VectorField > >
 			, public PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >
@@ -316,7 +426,7 @@ namespace MishaK
 		////////////////////////////////////////////////////////////////////
 		// The (intrinsic) covariant derivative of a GENERIC vector-field //
 		////////////////////////////////////////////////////////////////////
-		template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
+		template< unsigned int K , unsigned int N , HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField >
 		struct CovariantDerivativeField : public PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >
 		{
 			using T = SquareMatrix< double , K >;
@@ -339,7 +449,7 @@ namespace MishaK
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// The (extrinsic) covariant directional derivative of one GENERIC vector-field with respect to another //
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////
-		template< unsigned int K , unsigned int N , HasSimplexFunction< K , Point< double , N > > DirectionField , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
+		template< unsigned int K , unsigned int N , HasSimplexFunction< K , Point< double , N > > DirectionField , HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField >
 		struct CovariantDirectionalDerivativeField : public PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >
 		{
 			using T = Point< double , N >;
@@ -363,7 +473,7 @@ namespace MishaK
 		//////////////////////////////////////////////
 		// The divergence of a GENERIC vector-field //
 		//////////////////////////////////////////////
-		template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
+		template< unsigned int K , unsigned int N , HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField >
 		struct DivergenceField : public CovariantDerivativeField< K , N , VectorField >
 		{
 			using T = double;
@@ -385,7 +495,7 @@ namespace MishaK
 		//////////////////////////////////////////////////////////////////////////////////////////
 		// The (extrinsic) difference of the covariant derivatives of two GENERIC vector-fields //
 		//////////////////////////////////////////////////////////////////////////////////////////
-		template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField1 , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField2 >
+		template< unsigned int K , unsigned int N , HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField1 , HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField2 >
 		struct CovariantDerivativeDifferenceField : public PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >
 		{
 			using T = Point< double , N >;
@@ -409,7 +519,7 @@ namespace MishaK
 		//////////////////////////////////////////////////////////////
 		// The (extrinsic) Lie bracket of two GENERIC vector-fields //
 		//////////////////////////////////////////////////////////////
-		template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField1 , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField2 >
+		template< unsigned int K , unsigned int N , HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField1 , HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField2 >
 		struct LieBracketField : public PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >
 		{
 			using T = Point< double , N >;

@@ -30,7 +30,7 @@ DAMAGE.
 // DerivativeTester //
 //////////////////////
 template< unsigned int K , HasDotProduct T >
-template< HasSimplexFunctionAndFunctionDifferential< K , T > Field >
+template< HasSimplexDifferentiableFunction< K , T > Field >
 double DerivativeTester< K , T >::SquareError( Position< K > p , const Field & field , double delta )
 {
 	double error = 0;
@@ -46,7 +46,7 @@ double DerivativeTester< K , T >::SquareError( Position< K > p , const Field & f
 }
 
 template< unsigned int K , HasDotProduct T >
-template< HasSimplexFunctionAndFunctionDifferential< K , T > Field >
+template< HasSimplexDifferentiableFunction< K , T > Field >
 double DerivativeTester< K , T >::SquareError( const Field & field , unsigned int testCount , double delta )
 {
 	const Simplex< double , K , K > UnitRightSimplex = Simplex< double , K , K >::UnitRight();
@@ -328,7 +328,7 @@ ConnectionCoefficientField< K , Symmetrize >::Value
 //////////////////////////
 // IntrinsicVectorField //
 //////////////////////////
-template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
+template< unsigned int K , unsigned int N , HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField >
 typename IntrinsicVectorField< K , N , VectorField >::T
 IntrinsicVectorField< K , N , VectorField >::Value
 (
@@ -339,7 +339,7 @@ IntrinsicVectorField< K , N , VectorField >::Value
 	return e2i * v;
 }
 
-template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
+template< unsigned int K , unsigned int N , HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField >
 SimplexProcessing::Differential< K , typename IntrinsicVectorField< K , N , VectorField >::T >
 IntrinsicVectorField< K , N , VectorField >::DValue
 (
@@ -354,7 +354,7 @@ IntrinsicVectorField< K , N , VectorField >::DValue
 	return d;
 }
 
-template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
+template< unsigned int K , unsigned int N , HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField >
 typename IntrinsicVectorField< K , N , VectorField >::T
 IntrinsicVectorField< K , N , VectorField >::Value
 (
@@ -369,7 +369,7 @@ IntrinsicVectorField< K , N , VectorField >::Value
 	return Value( PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::Value( gInv , normal , normals , xForm , p ) , VF(p) );
 }
 
-template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
+template< unsigned int K , unsigned int N , HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField >
 SimplexProcessing::Differential< K , typename IntrinsicVectorField< K , N , VectorField >::T >
 IntrinsicVectorField< K , N , VectorField >::DValue
 (
@@ -384,22 +384,40 @@ IntrinsicVectorField< K , N , VectorField >::DValue
 	return DValue( PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::Value( gInv , normal , normals , xForm , p ) , PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >::DValue( gInv , normal , normals , xForm , p ) , VF(p) , VF.d(p) );
 }
 
+
+///////////////////////////////
+// FirstFundamentalFormField //
+///////////////////////////////
+template< unsigned int K >
+template< unsigned int N >
+typename FirstFundamentalFormField< K >::T
+FirstFundamentalFormField< K >::Value
+(
+	const Point< double , N > vertices[K+1] ,
+	Position< K >
+)
+{
+	Matrix< double , K , N > xForm;
+	for( unsigned int k=0 ; k<K ; k++ ) for( unsigned int d=0 ; d<N ; d++ ) xForm(k,d) = vertices[k+1][d] - vertices[0][d];
+	return xForm.transpose() * xForm;
+}
+
 ////////////////////////////////
 // SecondFundamentalFormField //
 ////////////////////////////////
-template< unsigned int K , bool DifferentiateNormals >
-SecondFundamentalFormField< K , DifferentiateNormals >::SecondFundamentalFormField( const Point< double , Dim > vertices[K+1] , const Point< double , Dim > normals[K+1] ) 
+template< unsigned int K , bool DifferentiateNormals , bool Symmetrize >
+SecondFundamentalFormField< K , DifferentiateNormals , Symmetrize >::SecondFundamentalFormField( const Point< double , Dim > vertices[K+1] , const Point< double , Dim > normals[K+1] ) 
 	: PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >( vertices , normals )
 {}
 
-template< unsigned int K , bool DifferentiateNormals >
-SecondFundamentalFormField< K , DifferentiateNormals >::SecondFundamentalFormField( const Simplex< double , Dim , K > & vertices , const Simplex< double , Dim , K > & normals ) 
+template< unsigned int K , bool DifferentiateNormals , bool Symmetrize>
+SecondFundamentalFormField< K , DifferentiateNormals , Symmetrize >::SecondFundamentalFormField( const Simplex< double , Dim , K > & vertices , const Simplex< double , Dim , K > & normals ) 
 	: SecondFundamentalFormField( &vertices[0] , &normals[0] )
 {}
 
-template< unsigned int K , bool DifferentiateNormals >
-typename SecondFundamentalFormField< K , DifferentiateNormals >::T
-SecondFundamentalFormField< K , DifferentiateNormals >::Value
+template< unsigned int K , bool DifferentiateNormals , bool Symmetrize >
+typename SecondFundamentalFormField< K , DifferentiateNormals , Symmetrize >::T
+SecondFundamentalFormField< K , DifferentiateNormals , Symmetrize >::Value
 (
 	const Point< double , Dim > & normal ,
 	const Point< double , Dim > normals[K+1] ,
@@ -407,12 +425,14 @@ SecondFundamentalFormField< K , DifferentiateNormals >::Value
 	Position< K > p
 )
 {
+	SquareMatrix< double , K  > II;
+
 	if constexpr( DifferentiateNormals )
 	{
-		Differential< K , Point< double , Dim > > _dN = DNormalizedValue( LinearInterpolant< K , Point< double , Dim > >::Value( normals , p ) , LinearInterpolant< K , Point< double , Dim > >::DValue( normals , p ) );
+		Differential< K , Point< double , Dim > > dn = DNormalizedValue( LinearInterpolant< K , Point< double , Dim > >::Value( normals , p ) , LinearInterpolant< K , Point< double , Dim > >::DValue( normals , p ) );
 		Matrix< double , K , Dim > dN;
-		for( unsigned int k=0 ; k<K ; k++ ) for( unsigned int n=0 ; n<K+1 ; n++ ) dN(k,n) = _dN[k][n];
-		return PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::Value( normal , normals , xForm , p ).transpose() * dN;
+		for( unsigned int k=0 ; k<K ; k++ ) for( unsigned int n=0 ; n<K+1 ; n++ ) dN(k,n) = dn[k][n];
+		II = PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::Value( normal , normals , xForm , p ).transpose() * dN;
 	}
 	else
 	{
@@ -426,14 +446,17 @@ SecondFundamentalFormField< K , DifferentiateNormals >::Value
 			e[k] = 1;
 			for( unsigned int _k=0 ; _k<K ; _k++ ) cov(_k,k) = -Point< double , K+1 >::Dot( n , di2e[_k] * e );
 		}
-		return cov;
+		II = cov;
 	}
+
+	if( Symmetrize ) return ( II + II.transpose() ) / 2.;
+	else             return II;
 }
 
 //////////////////////////////
 // CovariantDerivativeField //
 //////////////////////////////
-template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
+template< unsigned int K , unsigned int N , HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField >
 typename CovariantDerivativeField< K , N , VectorField >::T
 CovariantDerivativeField< K , N , VectorField >::Value
 (
@@ -465,7 +488,7 @@ CovariantDerivativeField< K , N , VectorField >::Value
 /////////////////////////////////////////
 // CovariantDirectionalDerivativeField //
 /////////////////////////////////////////
-template< unsigned int K , unsigned int N , HasSimplexFunction< K , Point< double , N > > DirectionField , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
+template< unsigned int K , unsigned int N , HasSimplexFunction< K , Point< double , N > > DirectionField , HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField >
 typename CovariantDirectionalDerivativeField< K , N , DirectionField , VectorField >::T
 CovariantDirectionalDerivativeField< K , N , DirectionField , VectorField >::Value
 (
@@ -494,7 +517,7 @@ CovariantDirectionalDerivativeField< K , N , DirectionField , VectorField >::Val
 /////////////////////
 // DivergenceField //
 /////////////////////
-template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField >
+template< unsigned int K , unsigned int N , HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField >
 typename DivergenceField< K , N , VectorField >::T
 DivergenceField< K , N , VectorField >::Value
 (
@@ -512,7 +535,7 @@ DivergenceField< K , N , VectorField >::Value
 ////////////////////////////////////////
 // CovariantDerivativeDifferenceField //
 ////////////////////////////////////////
-template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField1 , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField2 >
+template< unsigned int K , unsigned int N , HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField1 , HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField2 >
 typename CovariantDerivativeDifferenceField< K , N , VectorField1 , VectorField2 >::T
 CovariantDerivativeDifferenceField< K , N , VectorField1 , VectorField2 >::Value
 (
@@ -541,7 +564,7 @@ CovariantDerivativeDifferenceField< K , N , VectorField1 , VectorField2 >::Value
 /////////////////////
 // LieBracketField //
 /////////////////////
-template< unsigned int K , unsigned int N , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField1 , HasSimplexFunctionAndFunctionDifferential< K , Point< double , N > > VectorField2 >
+template< unsigned int K , unsigned int N , HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField1 , HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField2 >
 typename LieBracketField< K , N , VectorField1 , VectorField2 >::T
 LieBracketField< K , N , VectorField1 , VectorField2 >::Value
 (

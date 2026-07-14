@@ -37,7 +37,10 @@ namespace MishaK
 		struct EmbeddedMesh : public RiemannianMesh< K , EmbeddedMesh< K , Dim > >
 		{
 			using Scalar = double;
-			using EigenMatrixEntries = SystemIntegration::EigenMatrixEntries< SimplexProcessing::LinearElements< K >::NumElements >;
+#ifdef USING_GCC
+			using Differential = SimplexProcessing::Differential< K , Scalar >;
+#endif // USING_GCC
+			using EigenMatrixEntries = SystemIntegration::EigenMatrixEntries< SimplexProcessing::ScalarSystem< K >::NumElements >;
 
 			using RiemannianMesh< K , EmbeddedMesh< K , Dim > >::       metricTensorField;
 			using RiemannianMesh< K , EmbeddedMesh< K , Dim > >::inverseMetricTensorField;
@@ -74,39 +77,50 @@ namespace MishaK
 			auto elements( void ) const;
 
 			template< SimplexProcessing::HasFunction< std::pair< size_t , Point< double , Dim > > , size_t > SampleFunctor >
-			Eigen::SparseMatrix< double > evaluation( size_t sampleNum , SampleFunctor && sampleFunctor ) const;
+			Eigen::SparseMatrix< double > evaluationMatrix( size_t sampleNum , SampleFunctor && sampleFunctor ) const;
 
-			template< unsigned int QuadratureSamples , HasMeshFunctionOrDifferentialFunction< K , typename EmbeddedMesh< K , Dim >::Scalar > ScalarOrScalarDifferentialField >
-			Eigen::VectorXd dual( ScalarOrScalarDifferentialField && F ) const;
 
-			template< unsigned int QuadratureSamples >
-			Eigen::SparseMatrix< double > mass( void ) const;
+			template< unsigned int QuadratureSamples , HasMeshFunction< K , Point< double , SimplexProcessing::ScalarSystem< K >::NumElements > > SystemVectorField , HasMeshScaleFactorFunction< K > WeightField=UnitWeightField< K > >
+			Eigen::VectorXd systemVector( SystemVectorField && Sys , WeightField && WF=UnitWeightField< K >() ) const;
 
-			template< unsigned int QuadratureSamples >
-			Eigen::SparseMatrix< double > stiffness( void ) const;
+			template< unsigned int QuadratureSamples , HasMeshFunction< K , SquareMatrix< double , SimplexProcessing::ScalarSystem< K >::NumElements > > SystemMatrixField , HasMeshScaleFactorFunction< K > WeightField=UnitWeightField< K > >
+			Eigen::SparseMatrix< double > systemMatrix( SystemMatrixField && Sys , WeightField && WF=UnitWeightField< K >() ) const;
 
-			template< unsigned int QuadratureSamples , HasMeshFunctionOrDifferentialFunction< K , typename EmbeddedMesh< K , Dim >::Scalar > ScalarOrScalarDifferentialField , HasMeshScaleFactorFunction< K > WeightField >
-			Eigen::VectorXd weightedDual( ScalarOrScalarDifferentialField && F , WeightField && WF ) const;
+			template< unsigned int QuadratureSamples , HasMeshFunction< K , typename EmbeddedMesh< K , Dim >::Scalar > ScalarField , HasMeshScaleFactorFunction< K > WeightField=UnitWeightField< K > >
+			Eigen::VectorXd massVector( ScalarField && F , WeightField && WF=UnitWeightField< K >() ) const;
 
-			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField >
-			Eigen::SparseMatrix< double > weightedMass( WeightField && WF ) const;
+			template< unsigned int QuadratureSamples , HasMeshDifferentiableFunction< K , typename EmbeddedMesh< K , Dim >::Scalar > ScalarField , HasMeshScaleFactorFunction< K > WeightField=UnitWeightField< K > >
+			Eigen::VectorXd stiffnessVector( ScalarField && F , WeightField && WF=UnitWeightField< K >() ) const;
 
-			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField >
-			Eigen::SparseMatrix< double > weightedStiffness( WeightField && WF ) const;
+#ifdef USING_GCC
+			template< unsigned int QuadratureSamples , HasMeshFunction< K , typename EmbeddedMesh< K , Dim >::Differential > DifferentialField , HasMeshScaleFactorFunction< K > WeightField=UnitWeightField< K > >
+#else // !USING_GCC
+			template< unsigned int QuadratureSamples , HasMeshFunction< K , SimplexProcessing::Differential< K , typename EmbeddedMesh< K , Dim >::Scalar > > DifferentialField , HasMeshScaleFactorFunction< K > WeightField=UnitWeightField< K > >
+#endif // USING_GCC
+			Eigen::VectorXd stiffnessVector( DifferentialField && F , WeightField && WF=UnitWeightField< K >() ) const;
 
-			template< unsigned int QuadratureSamples , HasMeshTangentVectorFunction< K > TangentVectorField >
-			Eigen::SparseMatrix< double > derivationSystem( TangentVectorField && VF ) const;
+			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField=UnitWeightField< K > >
+			Eigen::SparseMatrix< double > massMatrix( WeightField && WF=UnitWeightField< K >() ) const;
 
-			template< unsigned int QuadratureSamples , typename SystemField >
-			Eigen::SparseMatrix< double > system( SystemField && Sys , bool needsScaling=true ) const;
+			template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField=UnitWeightField< K > >
+			Eigen::SparseMatrix< double > stiffnessMatrix( WeightField && WF=UnitWeightField< K >() ) const;
+
+			template< unsigned int QuadratureSamples , HasMeshTangentVectorFunction< K > TangentVectorField , HasMeshScaleFactorFunction< K > WeightField=UnitWeightField< K > >
+			Eigen::SparseMatrix< double > derivationSystemMatrix( TangentVectorField && VF , WeightField && WF=UnitWeightField< K >() ) const;
 
 
 			EigenMatrixEntries eigenMatrixEntries( void ) const { return this->template _eigenMatrixEntries< K+1 >( _vertices.size() , elementIndex() ); }
 
-			template< unsigned int QuadratureSamples , typename SystemField >
-			void setSystemEntries( EigenMatrixEntries & eme , SystemField && Sys ) const;
+			template< unsigned int QuadratureSamples , HasMeshFunction< K , SquareMatrix< double , SimplexProcessing::ScalarSystem< K >::NumElements > > SystemField >
+			void setSystemMatrixEntries( EigenMatrixEntries & eme , SystemField && Sys ) const;
 
 		protected:
+			template< unsigned int QuadratureSamples , HasMeshFunction< K , Point< double , SimplexProcessing::ScalarSystem< K >::NumElements > > SystemVectorField , HasMeshScaleFactorFunction< K > WeightField >
+			Eigen::VectorXd _systemVector( SystemVectorField && Sys , bool needsScaling , WeightField && WF ) const;
+
+			template< unsigned int QuadratureSamples , HasMeshFunction< K , SquareMatrix< double , SimplexProcessing::ScalarSystem< K >::NumElements > > SystemMatrixField , HasMeshScaleFactorFunction< K > WeightField >
+			Eigen::SparseMatrix< double > _systemMatrix( SystemMatrixField && Sys , bool needsScaling , WeightField && WF ) const;
+
 			std::vector< Point< double , Dim > > &_vertices;
 			std::vector< SimplexIndex< K > > &_simplices;
 		};

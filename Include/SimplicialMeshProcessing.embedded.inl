@@ -68,7 +68,7 @@ auto EmbeddedMesh< K , Dim >::elementIndex( void ) const { return [&]( size_t s 
 template< unsigned int K , unsigned int Dim >
 auto EmbeddedMesh< K , Dim >::elements( void ) const
 {
-	return SimplexProcessing::ArrayWrapper( [&]( size_t ){ return SimplexProcessing::LinearElements< K >(); } );
+	return SimplexProcessing::ArrayWrapper( [&]( size_t ){ return SimplexProcessing::ScalarSystem< K >::Elements(); } );
 }
 
 template< unsigned int K , unsigned int Dim >
@@ -86,9 +86,9 @@ auto EmbeddedMesh< K , Dim >::implicitFunctionToScalarField( ImplicitFunction &&
 
 template< unsigned int K , unsigned int Dim >
 template< SimplexProcessing::HasFunction< std::pair< size_t , Point< double , Dim > > , size_t > SampleFunctor >
-Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::evaluation( size_t sampleNum , SampleFunctor && sampleFunctor ) const
+Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::evaluationMatrix( size_t sampleNum , SampleFunctor && sampleFunctor ) const
 {
-	static SimplexProcessing::LinearElements< K > elements;
+	static typename SimplexProcessing::ScalarSystem< K >::Elements elements;
 
 	std::vector< Eigen::Triplet< double , size_t > > triplets( sampleNum * (K+1) );
 
@@ -110,64 +110,94 @@ Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::evaluation( size_t sample
 }
 
 template< unsigned int K , unsigned int Dim >
-template< unsigned int QuadratureSamples , HasMeshFunctionOrDifferentialFunction< K , typename EmbeddedMesh< K , Dim >::Scalar > ScalarOrScalarDifferentialField >
-Eigen::VectorXd EmbeddedMesh< K , Dim >::dual( ScalarOrScalarDifferentialField && F ) const
+template< unsigned int QuadratureSamples , HasMeshFunction< K , Point< double , SimplexProcessing::ScalarSystem< K >::NumElements > > SystemVectorField , HasMeshScaleFactorFunction< K > WeightField >
+Eigen::VectorXd EmbeddedMesh< K , Dim >::_systemVector( SystemVectorField && Sys , bool needsScaling , WeightField && WF ) const
 {
-	return this->template _dual< QuadratureSamples , K+1 , Scalar >( _vertices.size() , elements() , std::forward< ScalarOrScalarDifferentialField >( F ) , elementIndex() );
+	if constexpr( std::same_as< WeightField , UnitWeightField< K > > )
+		return RiemannianMesh< K , EmbeddedMesh< K , Dim > >::template _systemVector< QuadratureSamples , SimplexProcessing::ScalarSystem< K >::NumElements >( _vertices.size() , elementIndex() , std::forward< SystemVectorField >( Sys ) , needsScaling );
+	else
+	{
+		auto WeightedSys = ScaledField< K >( std::forward< WeightField >( WF ) , std::forward< SystemVectorField >( Sys ) ); 
+		return RiemannianMesh< K , EmbeddedMesh< K , Dim > >::template _systemVector< QuadratureSamples , SimplexProcessing::ScalarSystem< K >::NumElements >( _vertices.size() , elementIndex() , WeightedSys , needsScaling );
+	}
 }
 
 template< unsigned int K , unsigned int Dim >
-template< unsigned int QuadratureSamples , HasMeshFunctionOrDifferentialFunction< K , typename EmbeddedMesh< K , Dim >::Scalar > ScalarOrScalarDifferentialField , HasMeshScaleFactorFunction< K > WeightField >
-Eigen::VectorXd EmbeddedMesh< K , Dim >::weightedDual( ScalarOrScalarDifferentialField && F , WeightField && WF ) const
+template< unsigned int QuadratureSamples , HasMeshFunction< K , SquareMatrix< double , SimplexProcessing::ScalarSystem< K >::NumElements > > SystemMatrixField , HasMeshScaleFactorFunction< K > WeightField >
+Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::_systemMatrix( SystemMatrixField && Sys , bool needsScaling , WeightField && WF ) const
 {
-	return this->template _weightedDual< QuadratureSamples , K+1 , Scalar >( _vertices.size() , elements() , std::forward< ScalarOrScalarDifferentialField >( F ) , elementIndex() , std::forward< WeightField >( WF ) );
+	if constexpr( std::same_as< WeightField , UnitWeightField< K > > )
+		return RiemannianMesh< K , EmbeddedMesh< K , Dim > >::template _systemMatrix< QuadratureSamples , SimplexProcessing::ScalarSystem< K >::NumElements >( _vertices.size() , elementIndex() , std::forward< SystemMatrixField >( Sys ) , needsScaling );
+	else
+	{
+		auto WeightedSys = ScaledField< K >( std::forward< WeightField >( WF ) , std::forward< SystemMatrixField >( Sys ) ); 
+		return RiemannianMesh< K , EmbeddedMesh< K , Dim > >::template _systemMatrix< QuadratureSamples , SimplexProcessing::ScalarSystem< K >::NumElements >( _vertices.size() , elementIndex() , WeightedSys , needsScaling );
+	}
 }
 
 template< unsigned int K , unsigned int Dim >
-template< unsigned int QuadratureSamples >
-Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::mass( void ) const
+template< unsigned int QuadratureSamples , HasMeshFunction< K , Point< double , SimplexProcessing::ScalarSystem< K >::NumElements > > SystemVectorField , HasMeshScaleFactorFunction< K > WeightField >
+Eigen::VectorXd EmbeddedMesh< K , Dim >::systemVector( SystemVectorField && Sys , WeightField && WF ) const
 {
-	return this->template _mass< QuadratureSamples , K+1 , Scalar >( _vertices.size() , elements() , elementIndex() );
+	return _systemVector< QuadratureSamples >( std::forward< SystemVectorField >( Sys ) , true , std::forward< WeightField >( WF ) );
+}
+
+template< unsigned int K , unsigned int Dim >
+template< unsigned int QuadratureSamples , HasMeshFunction< K , SquareMatrix< double , SimplexProcessing::ScalarSystem< K >::NumElements > > SystemMatrixField , HasMeshScaleFactorFunction< K > WeightField >
+Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::systemMatrix( SystemMatrixField && Sys , WeightField && WF ) const
+{
+	return _systemMatrix< QuadratureSamples >( std::forward< SystemMatrixField >( Sys ) , true , std::forward< WeightField >( WF ) );
+}
+
+template< unsigned int K , unsigned int Dim >
+template< unsigned int QuadratureSamples , HasMeshFunction< K , typename EmbeddedMesh< K , Dim >::Scalar > ScalarField , HasMeshScaleFactorFunction< K > WeightField >
+Eigen::VectorXd EmbeddedMesh< K , Dim >::massVector( ScalarField && F , WeightField && WF ) const
+{
+	return _systemVector< QuadratureSamples >( SimplexProcessing::ArrayWrapper( [&]( size_t sIdx ){ return SimplexProcessing::ScalarSystem< K >::MassVector( simplexVertices( sIdx ) , F[sIdx] ); } ) , false , std::forward< WeightField >( WF ) );
+}
+
+template< unsigned int K , unsigned int Dim >
+template< unsigned int QuadratureSamples , HasMeshDifferentiableFunction< K , typename EmbeddedMesh< K , Dim >::Scalar > ScalarField , HasMeshScaleFactorFunction< K > WeightField >
+Eigen::VectorXd EmbeddedMesh< K , Dim >::stiffnessVector( ScalarField && F , WeightField && WF ) const
+{
+	return _systemVector< QuadratureSamples >( SimplexProcessing::ArrayWrapper( [&]( size_t sIdx ){ return SimplexProcessing::ScalarSystem< K >::StiffnessVector( simplexVertices( sIdx ) , F[sIdx] ); } ) , false , std::forward< WeightField >( WF ) );
+}
+
+template< unsigned int K , unsigned int Dim >
+#ifdef USING_GCC
+template< unsigned int QuadratureSamples , HasMeshFunction< K , typename EmbeddedMesh< K , Dim >::Differential > DifferentialField , HasMeshScaleFactorFunction< K > WeightField >
+#else // !USING_GCC
+template< unsigned int QuadratureSamples , HasMeshFunction< K , SimplexProcessing::Differential< K , typename EmbeddedMesh< K , Dim >::Scalar > > DifferentialField , HasMeshScaleFactorFunction< K > WeightField >
+#endif // USING_GCC
+Eigen::VectorXd EmbeddedMesh< K , Dim >::stiffnessVector( DifferentialField && F , WeightField && WF ) const
+{
+	return _systemVector< QuadratureSamples >( SimplexProcessing::ArrayWrapper( [&]( size_t sIdx ){ return SimplexProcessing::ScalarSystem< K >::StiffnessVector( simplexVertices( sIdx ) , F[sIdx] ); } ) , false , std::forward< WeightField >( WF ) );
 }
 
 template< unsigned int K , unsigned int Dim >
 template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField >
-Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::weightedMass( WeightField && WF ) const
+Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::massMatrix( WeightField && WF ) const
 {
-	return this->template _weightedMass< QuadratureSamples , K+1 , Scalar >( _vertices.size() , elements() , elementIndex() , std::forward< WeightField >( WF ) );
-}
-
-template< unsigned int K , unsigned int Dim >
-template< unsigned int QuadratureSamples >
-Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::stiffness( void ) const
-{
-	return this->template _stiffness< QuadratureSamples , K+1 , Scalar >( _vertices.size() , elements() , elementIndex() );
+	return _systemMatrix< QuadratureSamples >( SimplexProcessing::ArrayWrapper( [&]( size_t sIdx ){ return SimplexProcessing::ScalarSystem< K >::MassMatrix( simplexVertices( sIdx ) ); } ) , false , std::forward< WeightField >( WF ) );
 }
 
 template< unsigned int K , unsigned int Dim >
 template< unsigned int QuadratureSamples , HasMeshScaleFactorFunction< K > WeightField >
-Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::weightedStiffness( WeightField && WF ) const
+Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::stiffnessMatrix( WeightField && WF ) const
 {
-	return this->template _weightedStiffness< QuadratureSamples , K+1 , Scalar >( _vertices.size() , elements() , elementIndex() , std::forward< WeightField >( WF ) );
+	return _systemMatrix< QuadratureSamples >( SimplexProcessing::ArrayWrapper( [&]( size_t sIdx ){ return SimplexProcessing::ScalarSystem< K >::StiffnessMatrix( simplexVertices( sIdx ) ); } ) , false , std::forward< WeightField >( WF ) );
 }
 
 template< unsigned int K , unsigned int Dim >
-template< unsigned int QuadratureSamples , HasMeshTangentVectorFunction< K > TangentVectorField >
-Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::derivationSystem( TangentVectorField && VF ) const
+template< unsigned int QuadratureSamples , HasMeshTangentVectorFunction< K > TangentVectorField , HasMeshScaleFactorFunction< K > WeightField >
+Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::derivationSystemMatrix( TangentVectorField && VF , WeightField && WF ) const
 {
-	return this->template _system< QuadratureSamples , K+1 , Scalar >( _vertices.size() , elements() , elementIndex() , RiemannianMesh< K , EmbeddedMesh< K , Dim > >::template _DerivationSystemField< K+1 , Scalar >( VF ) , true );
+	return _systemMatrix< QuadratureSamples >( SimplexProcessing::ArrayWrapper( [&]( size_t sIdx ){ return SimplexProcessing::ScalarSystem< K >::DerivationMatrix( simplexVertices( sIdx ) , VF[sIdx] ); } ) , false , std::forward< WeightField >( WF ) );
 }
 
 template< unsigned int K , unsigned int Dim >
-template< unsigned int QuadratureSamples , typename SystemField >
-Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::system( SystemField && Sys , bool needsScaling ) const
+template< unsigned int QuadratureSamples , HasMeshFunction< K , SquareMatrix< double , SimplexProcessing::ScalarSystem< K >::NumElements > > SystemField >
+void EmbeddedMesh< K , Dim >::setSystemMatrixEntries( EigenMatrixEntries &eme , SystemField && Sys ) const
 {
-	return this->template _system< QuadratureSamples , K+1 , Scalar >( _vertices.size() , elements() , elementIndex() , std::forward< SystemField >( Sys ) , needsScaling );
-}
-
-template< unsigned int K , unsigned int Dim >
-template< unsigned int QuadratureSamples , typename SystemField >
-void EmbeddedMesh< K , Dim >::setSystemEntries( EigenMatrixEntries &eme , SystemField && Sys ) const
-{
-	this->template _setSystemEntries< QuadratureSamples , K+1 , Scalar >( eme , elements() , std::forward< SystemField >( Sys ) );
+	this->template _setSystemMatrixEntries< QuadratureSamples , SimplexProcessing::ScalarSystem< K >::NumElements >( eme , std::forward< SystemField >( Sys ) , true );
 }

@@ -1,4 +1,4 @@
-<center><h2>Phong-Rodrigues Extrinsic Vector-Field Processing (Version 1.10)</h2></center>
+<center><h2>Phong-Rodrigues Extrinsic Vector-Field Processing (Version 1.15)</h2></center>
 <center>
 <a href="#LINKS">links</a>
 <a href="#EXECUTABLES">executables</a>
@@ -20,9 +20,9 @@ This software supports vector-field processing using the extrinsically defined P
 <a href="http://www.cs.jhu.edu/~misha/MyPapers/SGP26.pdf">[Liu, Stein, Vaxman, Ben-Chen, and Kazhdan, 2026]</a>
 <br>
 <b>Executables: </b>
-<a href="https://www.cs.jhu.edu/~misha/Code/PhongRodriguesVF/Version1.10/PRVF.x64.zip">Win64</a><br>
+<a href="https://www.cs.jhu.edu/~misha/Code/PhongRodriguesVF/Version1.15/PRVF.x64.zip">Win64</a><br>
 <b>Source Code:</b>
-<a href="https://www.cs.jhu.edu/~misha/Code/PhongRodriguesVF/Version1.10/PRVF.Source.zip">ZIP</a> <a href="https://github.com/mkazhdan/PhongRodriguesVF">GitHub</a><br>
+<a href="https://www.cs.jhu.edu/~misha/Code/PhongRodriguesVF/Version1.15/PRVF.Source.zip">ZIP</a> <a href="https://github.com/mkazhdan/PhongRodriguesVF">GitHub</a><br>
 <B>Data:</B>
 <A HREF="https://www.cs.jhu.edu/~misha/Code/PhongRodriguesVF/PRVF.Data.zip">ZIP</A><br>
 <b>Older Versions:</b>
@@ -181,14 +181,14 @@ This evaluates the bracket and computes its best-fit representation in terms of 
 <DD> After being initialized with the vertices, normals, and triangles of a mesh, different system matrices can be computed.
 <UL>
 <LI> The method<BR>
-<CENTER><CODE>Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::mass&lt;QuadratureSamples&gt;(void)</CODE></CENTER><BR>
+<CENTER><CODE>Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::massMatrix&lt;QuadratureSamples&gt;(void)</CODE></CENTER><BR>
 return the symmetric <code>3&middot;|V|&times;3&middot;|V|</code> mass matrix, with <CODE>QuadratureSamples</CODE> the numer of quadrature points per triangle.
 <LI> The method:
-<CENTER><CODE>Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::stiffness&lt;QuadratureSamples&gt;(void)</CODE></CENTER><BR>
+<CENTER><CODE>Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::stiffnessMatrix&lt;QuadratureSamples&gt;(void)</CODE></CENTER><BR>
 return the symmetric <code>3&middot;|V|&times;3&middot;|V|</code> stiffness matrix defined by the connection Laplacian.
 <LI> Symmetric <code>3&middot;|V|&times;3&middot;|V|</code> matrices defining the stiffness with respect to individual components of the covariant matrix can be obtained invoking the method:<BR>
-<CENTER><CODE>Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::stiffness&lt;QuadratureSamples,CovComponent&gt;(void)</CODE></CENTER><BR>
-with <CODE>CovComponent</CODE> an <CODE>enum</CODE> of type <CODE>CovariantComponent</CODE> describing the component of the covariant derivative used to define the stiffness.
+<CENTER><CODE>Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::stiffnessMatrix&lt;QuadratureSamples,Component&gt;(void)</CODE></CENTER><BR>
+with <CODE>Component</CODE> an integer flag denoting the type of <CODE>SimplexProcessing::StiffnessComponents</CODE> of the covariant derivative used to define the stiffness.
 <LI> The method:
 <CENTER><CODE>Eigen::SparseMatrix&lt;double&gt; EmbeddedPhongMesh&lt;2&gt;::tangentProlongation(void)</CODE></CENTER><BR>
 returns the sparse <code>3&middot;|V|&times;2&middot;|V|</code> matrix mapping two degrees of freedom at a vertex, representing the linear combinations of a tangent vector with respect to a chosen frame, to its coordinates in 3D. The frame is chosen to be orthonormal, so that if <CODE>P</CODE> is the matrix returned by the method, the matrix <CODE>P.transpose()*P</CODE> is the <code>3&middot;|V|&times;3&middot;|V|</code> matrix describing the operation of projecting out the normal component.
@@ -210,7 +210,7 @@ Extrinsic vector fields are represented by <CODE>Eigen::VectorXd</CODE>s of size
 returning the value of the vector-field within the triangle.
 </UL>
 One can obtain <CODE>Eigen::VectorXd</CODE> of size <code>3&middot;|V|</CODE> giving the integral of the inner-product of the vector-field with each of the Phong-Rodrigues basis vector-fields by invoking the method:<BR>
-<CENTER><CODE>Eigen::VectorXd EmbeddedPhongMesh<2>::dual&lt;QuadratureSamples&gt;(MeshField &amp;&amp;) const</CODE></CENTER>
+<CENTER><CODE>Eigen::VectorXd EmbeddedPhongMesh<2>::massVector&lt;QuadratureSamples&gt;(MeshField &amp;&amp;) const</CODE></CENTER>
 
 </DL>
 </OL>
@@ -230,6 +230,11 @@ One can obtain <CODE>Eigen::VectorXd</CODE> of size <code>3&middot;|V|</CODE> gi
 <a href="https://www.cs.jhu.edu/~misha/Code/PhongRodriguesVF/Version1.10/">Version 1.10</a>:
 <ul>
 <li> added support for computing the Lie bracket, independent of the metric and/or connection.
+</ul>
+
+<a href="https://www.cs.jhu.edu/~misha/Code/PhongRodriguesVF/Version1.15/">Version 1.15</a>:
+<ul>
+<li> cleaned up code and renamed functions consistently
 </ul>
 
 </details>

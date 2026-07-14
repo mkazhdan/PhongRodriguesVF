@@ -162,11 +162,11 @@ void NormalFitter< K >::_SmoothNormals( EmbeddedMesh< K , Dim > mesh , std::vect
 
 	// Going with [Energy 1]
 
-	Eigen::SparseMatrix< double > L , P , Pt , S = mesh.template stiffness< Quadrature >() * diffusionTime;
+	Eigen::SparseMatrix< double > L , P , Pt , S = mesh.template stiffnessMatrix< Quadrature >() * diffusionTime;
 
 	// Set the system
 	{
-		L = Extend( mesh.template mass< Quadrature >() + S );
+		L = Extend( mesh.template massMatrix< Quadrature >() + S );
 
 		EmbeddedPhongMesh< K > _mesh( mesh.vertices() , normals , mesh.simplices() );
 		P = _mesh.tangentProlongation();

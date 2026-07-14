@@ -35,15 +35,6 @@ namespace MishaK
 	{
 		namespace SystemIntegration
 		{
-			template< unsigned int K , unsigned int NumF , typename T , typename TestFunctions /* = Samples< Fields< K , T > > */ , typename BilinearForms /* = Field< K , BilinearForm< T > */ >
-			auto SystemVectorField( TestFunctions && Fs , BilinearForms && B );
-
-			template< unsigned int K , unsigned int NumF , typename T , typename Function /* = Field< K , T > */ , typename TestFunctions /* = Samples< Fields< K , T > > */ , typename BilinearForms /* = Field< K , BilinearForm< T > */ >
-			auto SystemVectorField( Function && F , TestFunctions && Fs , BilinearForms && B );
-
-			template< unsigned int K , unsigned int NumF , typename T , typename TestFunctions /* = Samples< Fields< K , T > > */ , typename BilinearForms /* = Field< K , BilinearForm< T > */ >
-			auto SystemMatrixField( TestFunctions && Fs , BilinearForms && B );
-
 			template< unsigned int NumElementsPerSimplex >
 			struct EigenMatrixEntries
 			{
@@ -64,9 +55,6 @@ namespace MishaK
 			protected:
 				Eigen::SparseMatrix< double > *_M;
 				std::vector< double * > _matrixEntries;
-
-				template< unsigned int _NumElementsPerSimplex , typename _MassFunctor /* Samples< SquareMatrix< double , NumElementsPerSimplex > > */ >
-				friend void _SetMassEntries( EigenMatrixEntries< _NumElementsPerSimplex > &eme , unsigned int numS , _MassFunctor && Mass );
 			};
 
 			template< unsigned int K , unsigned int QuadratureSamples >

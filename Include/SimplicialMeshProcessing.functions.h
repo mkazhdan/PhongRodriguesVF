@@ -39,5 +39,17 @@ namespace MishaK
 			return SimplexProcessing::ArrayWrapper( [SF,F]( size_t sIdx ){ return SimplexProcessing::ScaledField< K >( SF[sIdx] , F[sIdx] ); } );
 		}
 	}
+
+	template< unsigned int K >
+	struct UnitWeightField
+	{
+		auto operator[]( size_t idx ) const { return SimplexProcessing::UnitWeightField< K >(); }
+	};
+
+	template< unsigned int K , unsigned int N >
+	struct IdentityField
+	{
+		auto operator[]( size_t idx ) const { return SimplexProcessing::IdentityField< K , N >(); }
+	};
 }
 #endif // SIMPLICIAL_MESH_PROCESSING_FUNCTIONS_INCLUDED

@@ -55,13 +55,7 @@ namespace MishaK
 		concept HasSimplexFunction = HasFunction< Field , T , Position< K > >;
 
 		template< typename Field , unsigned int K , typename T >
-		concept HasSimplexScaleFactorFunction = HasSimplexFunction< Field , K , ScaleFactor >;
-
-		template< typename Field , unsigned int K , typename T >
-		concept HasSimplexFunctionDifferential = requires( const Field f , Position< K > p ) { { f.d(p) } -> std::same_as< SimplexProcessing::Differential< K , T > >; };
-
-		template< typename Field , unsigned int K , typename T >
-		concept HasSimplexFunctionAndFunctionDifferential = HasSimplexFunction< Field , K ,T > && HasSimplexFunctionDifferential< Field , K , T >;
+		concept HasSimplexDifferentiableFunction = HasSimplexFunction< Field , K , T > && requires( const Field f , Position< K > p ) { { f.d(p) } -> std::same_as< Differential< K , T > >; };
 
 		template< typename Field , unsigned int K >
 		concept HasArrayOfSimplexInvocables = requires( const Field f , size_t idx , Position< K > p ) { { f[idx](p) }; };
@@ -69,29 +63,8 @@ namespace MishaK
 		template< typename Field , unsigned int K , typename T >
 		concept HasArrayOfSimplexFunctions = requires( const Field f , size_t idx , Position< K > p ) { { f[idx](p) } -> std::same_as< T >; };
 
-		template< typename Function , unsigned int K , typename T >
-		concept HasSimplexlinearMapFunction = requires( const Function f , Position< K > p , T arg ) { { f(p)(arg) } -> std::same_as< T >; };
-
-		template< typename Function , unsigned int K , typename T >
-		concept HasSimplexBilinearFormFunction = requires( const Function f , Position< K > p , T arg1 , T arg2 ) { { f(p)(arg1,arg2) } -> std::same_as< double >; };
-
-		template< typename Function , unsigned int K , unsigned int N , typename T >
-		concept HasSimplexSystemVectorFunction = requires( const Function f , Position< K > p , const T * args ){ { f(p)(args) } -> std::same_as< Point< double , N > >; };
-
-		template< typename Function , unsigned int K , unsigned int N , typename T >
-		concept HasSimplexSystemMatrixFunction = requires( const Function f , Position< K > p , const T * args ){ { f(p)(args) } -> std::same_as< SquareMatrix< double , N > >; };
-
-		template< typename Function , unsigned int K , typename T >
-		concept HasArrayOfSimplexlinearMapFunctions = requires( const Function f , size_t idx , Position< K > p , T arg ) { { f[idx](p)(arg) } -> std::same_as< T >; };
-
-		template< typename Function , unsigned int K , typename T >
-		concept HasArrayOfSimplexBilinearFormFunctions = requires( const Function f , size_t idx , Position< K > p , T arg1 , T arg2 ) { { f[idx](p)(arg1,arg2) } -> std::same_as< double >; };
-
-		template< typename Function , unsigned int K , unsigned int N , typename T >
-		concept HasArrayOfSimplexSystemVectorFunctions = requires( const Function f , size_t idx , Position< K > p , const T * arg ) { { f[idx](p)(arg) } -> std::same_as< Point< double , N > >; };
-
-		template< typename Function , unsigned int K , unsigned int N , typename T >
-		concept HasArrayOfSimplexSystemMatrixFunctions = requires( const Function f , size_t idx , Position< K > p , const T * arg ) { { f[idx](p)(arg) } -> std::same_as< SquareMatrix< double , N > >; };
+		template< typename Field , unsigned int K , typename T >
+		concept HasArrayOfSimplexDifferentiableFunctions = requires( const Field f , size_t idx , Position< K > p ) { { f[idx].d(p) } -> std::same_as< Differential< K , T > >; };
 	}
 }
 #endif // SIMPLEX_PROCESSING_CONCEPTS_INCLUDED

@@ -26,24 +26,6 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 DAMAGE.
 */
 
-template< unsigned int K , unsigned int NumF , typename T , typename TestFunctions /* = Samples< Fields< K , T > > */ , typename BilinearForms /* = Field< K , BilinearForm< T > */ >
-auto SystemVectorField( TestFunctions && Fs , BilinearForms && B )
-{
-	return SimplexProcessing::ArrayWrapper( [Fs,B]( size_t sIdx ){ return SimplexProcessing::SystemIntegration::SystemVectorField< K , NumF , T >( Fs[sIdx] , B[sIdx] ); } );
-}
-
-template< unsigned int K , unsigned int NumF , typename T , typename Function /* = Field< K , T > */ , typename TestFunctions /* = Samples< Fields< K , T > > */ , typename BilinearForms /* = Field< K , BilinearForm< T > */ >
-auto SystemVectorField( Function && F , TestFunctions && Fs , BilinearForms && B )
-{
-	return SimplexProcessing::ArrayWrapper( [F,Fs,B]( size_t sIdx ){ return SimplexProcessing::SystemIntegration::SystemVectorField< K , NumF , T >( F[sIdx] , Fs[sIdx] , B[sIdx] ); } );
-}
-
-template< unsigned int K , unsigned int NumF , typename T , typename TestFunctions /* = Samples< Fields< K , T > > */ , typename BilinearForms /* = Field< K , BilinearForm< T > */ >
-auto SystemMatrixField( TestFunctions && Fs , BilinearForms && B )
-{
-	return SimplexProcessing::ArrayWrapper( [Fs,B]( size_t sIdx ){ return SimplexProcessing::SystemIntegration::SystemMatrixField< K , NumF , T >( Fs[sIdx] , B[sIdx] ); } );
-}
-
 //////////////////
 // MCIntegrator //
 //////////////////

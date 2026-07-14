@@ -35,6 +35,11 @@ DAMAGE.
 
 #define FAST_COMPILE	//	 Remove some of the templating options
 
+// GCC appears to choke on some of the concepts
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+#define USING_GCC
+#endif
+
 ////////////////////////
 // Default Parameters //
 ////////////////////////

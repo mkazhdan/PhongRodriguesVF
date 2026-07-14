@@ -231,3 +231,9 @@ auto ScaledField( ScaleFactorField && SF , Field && F )
 {
 	return [_SF=std::forward< ScaleFactorField >(SF),_F=std::forward< Field >(F)]( Position< K > p ){ return _SF(p) * _F(p); };
 }
+
+template< unsigned int K >
+double UnitWeightField< K >::operator()( Position< K > ) const { return 1.; }
+
+template< unsigned int K , unsigned int N >
+SquareMatrix< double , N > IdentityField< K , N >::operator()( Position< K > ) const { return SquareMatrix< double , N >::Identity(); };
