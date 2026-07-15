@@ -116,6 +116,10 @@ namespace MishaK
 			template< unsigned int QuadratureSamples , unsigned int Components , HasMeshScaleFactorFunction< K > WeightField=UnitWeightField< K > >
 			Eigen::SparseMatrix< double > stiffnessMatrix( WeightField && WF=UnitWeightField< K >() ) const;
 
+			template< unsigned int QuadratureSamples , HasMeshDifferentiableFunction< K , typename EmbeddedPhongMesh< K >::Vector > VectorField , HasMeshScaleFactorFunction< K > WeightField=UnitWeightField< K > >
+			Eigen::SparseMatrix< double > lieBracketMassMatrix( VectorField && VF , WeightField && WF=UnitWeightField< K >() ) const;
+
+
 			EigenMatrixEntries eigenMatrixEntries( void ) const { return this->template _eigenMatrixEntries< (K+1)*Dim >( _vertices.size()*Dim , elementIndex() ); }
 
 #ifdef USING_GCC

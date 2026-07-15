@@ -223,6 +223,13 @@ Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::stiffnessMatrix( WeightFie
 }
 
 template< unsigned int K >
+template< unsigned int QuadratureSamples , HasMeshDifferentiableFunction< K , typename EmbeddedPhongMesh< K >::Vector > VectorField , HasMeshScaleFactorFunction< K > WeightField >
+Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::lieBracketMassMatrix( VectorField && VF , WeightField && WF ) const
+{
+	return _systemMatrix< QuadratureSamples >( SimplexProcessing::ArrayWrapper( [&]( size_t sIdx ){ return SimplexProcessing::PhongRodriguesSystem< K , Dim >::LieBracketMatrix( simplexVertices(sIdx) , simplexNormals(sIdx) , VF[sIdx] ); } ) , false , std::forward< WeightField >( WF ) );
+}
+
+template< unsigned int K >
 #ifdef USING_GCC
 template< unsigned int QuadratureSamples , HasMeshFunction< K , typename EmbeddedPhongMesh< K >::SystemMatrix > SystemField >
 #else // !USING_GCC

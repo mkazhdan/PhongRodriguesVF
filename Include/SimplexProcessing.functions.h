@@ -101,6 +101,19 @@ namespace MishaK
 		template< unsigned int K , unsigned int N >
 		struct IdentityField{ SquareMatrix< double , N > operator()( Position< K > ) const; };
 
+		/////////////////////////////////////////////////////////////////////////////////////////////////////
+		// Functionality for validating that analytic derivatives are approximated by discrete derivatives //
+		/////////////////////////////////////////////////////////////////////////////////////////////////////
+		template< unsigned int K , HasDotProduct T >
+		struct DerivativeTester
+		{
+			template< HasSimplexDifferentiableFunction< K , T > Field >
+			static double SquareError( Position< K > p , const Field & field , double delta );
+
+			template< HasSimplexDifferentiableFunction< K , T > Field >
+			static double SquareError( const Field & field , unsigned int testCount , double delta );
+		};
+
 #include "SimplexProcessing.functions.inl"
 	}
 }

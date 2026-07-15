@@ -91,3 +91,27 @@ auto _MeshField< K , NeedsVertices , NeedsNormals , SimplexField , InTypes ... >
 		}
 	}
 }
+
+template< unsigned int K , SimplexProcessing::HasDotProduct T , HasMeshFunction< K , T > Field >
+auto SquaredL2NormField( Field && F )
+{
+	return SimplexProcessing::ArrayWrapper( [ f=std::forward< Field >(F) ]( size_t sIdx ){ return SimplexProcessing::SquaredL2NormField< K , T >( f[sIdx] ); } );
+}
+
+template< unsigned int K , SimplexProcessing::HasDotProduct T , HasMeshFunction< K , T > Field1 , HasMeshFunction< K , T > Field2 >
+auto SquaredL2DifferenceField( Field1 && F1 , Field2 && F2 )
+{
+	return SimplexProcessing::ArrayWrapper( [ f1=std::forward< Field1 >(F1) , f2=std::forward< Field2 >(F2) ]( size_t sIdx ){ return SimplexProcessing::SquaredL2DifferenceField< K , T  >( f1[sIdx] , f2[sIdx] ); } );
+}
+
+template< unsigned int K , SimplexProcessing::HasDotProduct T , HasMeshFunction< K , T > Field1 , HasMeshFunction< K , T > Field2 >
+auto DotProductField( Field1 && F1 , Field2 && F2 )
+{
+	return SimplexProcessing::ArrayWrapper( [ f1=std::forward< Field1 >(F1) , f2=std::forward< Field2 >(F2) ]( size_t sIdx ){ return SimplexProcessing::DotProductField< K , T >( f1[sIdx] , f2[sIdx] ); } );
+}
+
+template< unsigned int K , HasMeshFunction< K , Point< double , K > > VectorField , HasMeshDifferentiableFunction< K , double > ScalarField >
+auto DerivationField( ScalarField && SF , VectorField && VF )
+{
+	return SimplexProcessing::ArrayWrapper( [ sf=std::forward< ScalarField >(SF) , vf=std::forward< VectorField >(VF) ]( size_t sIdx ){ return SimplexProcessing::DerivationField< K >( sf[sIdx] , vf[sIdx] ); } );
+}

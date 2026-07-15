@@ -237,3 +237,30 @@ double UnitWeightField< K >::operator()( Position< K > ) const { return 1.; }
 
 template< unsigned int K , unsigned int N >
 SquareMatrix< double , N > IdentityField< K , N >::operator()( Position< K > ) const { return SquareMatrix< double , N >::Identity(); };
+
+template< unsigned int K , HasDotProduct T >
+template< HasSimplexDifferentiableFunction< K , T > Field >
+double DerivativeTester< K , T >::SquareError( Position< K > p , const Field & field , double delta )
+{
+	double error = 0;
+	for( unsigned int k=0 ; k<K ; k++ )
+	{
+		// The offset positions along the k-th coordinate
+		Point< double , K > _p[] = { p , p };
+		_p[0][k] -= delta , _p[1][k] += delta;
+		T d = ( field( _p[1] ) - field( _p[0] ) ) / ( 2. * delta ) - field.d( p )[k];
+		error += DotProduct( d , d );
+	}
+	return error / K;
+}
+
+template< unsigned int K , HasDotProduct T >
+template< HasSimplexDifferentiableFunction< K , T > Field >
+double DerivativeTester< K , T >::SquareError( const Field & field , unsigned int testCount , double delta )
+{
+	const Simplex< double , K , K > UnitRightSimplex = Simplex< double , K , K >::UnitRight();
+	double error = 0;
+	for( unsigned int c=0 ; c<testCount ; c++ ) error += SquareError( UnitRightSimplex.randomSample() , field , delta );
+	return error / testCount;
+}
+

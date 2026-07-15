@@ -126,7 +126,7 @@ Eigen::SparseMatrix< double > SystemAssembler::Matrix( size_t numF , size_t numS
 		{
 			SquareMatrix< double , NumElementsPerSimplex > M = MF[ sIdx ];
 			for( unsigned int e1=0 ; e1<NumElementsPerSimplex ; e1++ ) for( unsigned int e2=0 ; e2<NumElementsPerSimplex ; e2++ )
-				triplets[ sIdx * NumElementsPerSimplex * NumElementsPerSimplex + e1 * NumElementsPerSimplex + e2 ] = Eigen::Triplet< double >( Idx(sIdx,e1) , Idx(sIdx,e2) , M(e1,e2) );
+				triplets[ sIdx * NumElementsPerSimplex * NumElementsPerSimplex + e1 * NumElementsPerSimplex + e2 ] = Eigen::Triplet< double >( Idx(sIdx,e2) , Idx(sIdx,e1) , M(e1,e2) );
 		}
 	);
 	Eigen::SparseMatrix< double > M( numF , numF );

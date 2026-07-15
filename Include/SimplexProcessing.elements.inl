@@ -45,7 +45,7 @@ ScalarSystem< K >::Elements::Elements( void )
 //////////////////
 template< unsigned int K >
 template< unsigned int N , HasSimplexFunction< K , Differential< K , double > > VectorField , bool MeasureScale >
-auto ScalarSystem< K >::DerivationMatrix( const Point< double , N > vertices[K+1] , const VectorField & VF )
+auto ScalarSystem< K >::DerivationMassMatrix( const Point< double , N > vertices[K+1] , const VectorField & VF )
 {
 	return [ elements=Elements() , measureScale=MeasureScaleField<K>( vertices ) , vf=VF ]( Position< K > p )
 		{
@@ -68,7 +68,7 @@ auto ScalarSystem< K >::DerivationMatrix( const Point< double , N > vertices[K+1
 				for( unsigned int k=0 ; k<K ; k++ ) value += dValues[m][k] * v[k];
 
 				// Integrate that against the n-the element function
-				for( unsigned int n=0 ; n<NumElements ; n++ ) D(n,m) = value * values[n];
+				for( unsigned int n=0 ; n<NumElements ; n++ ) D(m,n) = value * values[n];
 			}
 
 			if constexpr( MeasureScale ) return D * measureScale( p );
@@ -181,6 +181,49 @@ auto PhongRodriguesSystem< K , N >::MassVector( const Point< double , N > vertic
 			for( unsigned int e=0 ; e<NumElements ; e++ ) m[e] = Point< double , N >::Dot( v , elements[e](p) );
 			if constexpr( MeasureScale ) return m * measureScale( p );
 			else                         return m;
+		};
+}
+
+template< unsigned int K , unsigned int N >
+template< HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField , bool MeasureScale >
+auto PhongRodriguesSystem< K , N >::LieBracketMatrix( const Point< double , N > vertices[K+1] , const Point< double , N > normals[K+1] , const VectorField & VF )
+{
+	return [ elements=Elements( normals ) , E2I = PhongRodriguesExtrinsicToIntrinsicTangentXFormField< K >( vertices , normals ) , I = FirstFundamentalFormField< K >( vertices ) , measureScale=MeasureScaleField< K >( vertices ) , vf=VF ]( Position< K > p )
+		{
+			SquareMatrix< double , NumElements > B;
+
+			SquareMatrix< double , K > g = I(p);
+			Matrix< double , N , K > e2i = E2I(p);
+			Differential< K , Matrix< double , N , K > > de2i = E2I.d(p);
+
+			auto SetIntrinsicValueAndDifferential = [&e2i,&de2i]( auto && VF , Position< K > p , Point< double , K > & value , Differential< K , Point< double , K > > & dValue )
+				{
+					Point< double , N > value_e = VF(p);
+					Differential< K , Point< double , N > > dValue_e = VF.d(p);
+					value = e2i * value_e;
+					for( unsigned int k=0 ; k<K ; k++ ) dValue[k] = de2i[k] * value_e + e2i * dValue_e[k];
+				};
+
+			// Set the intrinsic vector-field value and differential
+			Point< double , K > value;
+			Differential< K , Point< double , K > > dValue;
+			SetIntrinsicValueAndDifferential( vf , p , value , dValue );
+
+			// Set the intrinsic elements values and differentials
+			Point< double , K > values[NumElements];
+			Differential< K , Point< double , K > > dValues[NumElements];
+			for( unsigned int e=0 ; e<NumElements ; e++ ) SetIntrinsicValueAndDifferential( elements[e] , p , values[e] , dValues[e] );
+
+			for( unsigned int l=0 ; l<NumElements ; l++ )
+			{
+				Point< double , K > b;
+				for( unsigned int k=0 ; k<K ; k++ ) b += dValues[l][k] * value[k] - dValue[k] * values[l][k];
+				b = g * b;
+				for( unsigned int m=0 ; m<NumElements ; m++ ) B(l,m) = Point< double , K >::Dot( b , values[m] );
+			}
+
+			if constexpr( MeasureScale ) return B * measureScale( p );
+			else                         return B;
 		};
 }
 

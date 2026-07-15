@@ -106,10 +106,10 @@ namespace MishaK
 
 			// Returns the functionality for computing the derivation matrix associated to an intrinsic tangent vector-field
 			template< unsigned int N , HasSimplexFunction< K , Differential< K , double > > VectorField , bool MeasureScale=true >
-			static auto DerivationMatrix( const Point< double , N > vertices[K+1] , const VectorField & VF );
+			static auto DerivationMassMatrix( const Point< double , N > vertices[K+1] , const VectorField & VF );
 
 			template< unsigned int N , HasSimplexFunction< K , Differential< K , double > > VectorField , bool MeasureScale=true >
-			static auto DerivationMatrix( const Simplex< double , N , K > & vertices , const VectorField & VF ){ return DerivationMatrix< N , VectorField , MeasureScale >( &vertices[0] , VF ); }
+			static auto DerivationMassMatrix( const Simplex< double , N , K > & vertices , const VectorField & VF ){ return DerivationMassMatrix< N , VectorField , MeasureScale >( &vertices[0] , VF ); }
 
 			// Returns the functionality for computing the mass matrix
 			template< unsigned int N , bool MeasureScale=true >
@@ -156,6 +156,14 @@ namespace MishaK
 			//////////////////////////
 			// Matrix functionality //
 			//////////////////////////
+
+			// Returns the functionality for computing the Lie bracket matrix associated to a tangent vector-field
+			// That is, given a differentiable vector-field X, and a vector-field expressed in the PR basis Y, the dual representation of [X,Y] is the same as M_X * Y
+			template< HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField , bool MeasureScale=true >
+			static auto LieBracketMatrix( const Point< double , N > vertices[K+1] , const Point< double , N > normals[K+1] , const VectorField & VF );
+
+			template< HasSimplexDifferentiableFunction< K , Point< double , N > > VectorField , bool MeasureScale=true >
+			static auto LieBracketMatrix( const Simplex< double , N , K > & vertices , const Simplex< double , N , K > & normals , const VectorField & VF ){ return LieBracketMatrix< VectorField , MeasureScale >( &vertices[0] , &normals[0] , VF ); }
 
 			// Returns the functionality for computing the mass matrix
 			template< bool MeasureScale=true , HasSimplexFunction< K , SquareMatrix< double , N > > InnerProductField=IdentityField< K , N > >

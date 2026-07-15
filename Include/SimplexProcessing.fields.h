@@ -36,19 +36,6 @@ namespace MishaK
 		/////////////////
 		// HELPER CLASSES 
 
-		/////////////////////////////////////////////////////////////////////////////////////////////////////
-		// Functionality for validating that analytic derivatives are approximated by discrete derivatives //
-		/////////////////////////////////////////////////////////////////////////////////////////////////////
-		template< unsigned int K , HasDotProduct T >
-		struct DerivativeTester
-		{
-			template< HasSimplexDifferentiableFunction< K , T > Field >
-			static double SquareError( Position< K > p , const Field & field , double delta );
-
-			template< HasSimplexDifferentiableFunction< K , T > Field >
-			static double SquareError( const Field & field , unsigned int testCount , double delta );
-		};
-
 		//////////////////////////////////////////////////////////////////////////////
 		// A wrapper adding functionality to return the differential, as a function //
 		//////////////////////////////////////////////////////////////////////////////
@@ -386,6 +373,30 @@ namespace MishaK
 
 		////////////////////////////////
 		// GENERIC FUNCTIONS ON THE MESH
+
+		/////////////////////////////////////////
+		// Squared L2-norm of a GENERIC fields //
+		/////////////////////////////////////////
+		template< unsigned int K , HasDotProduct T , HasSimplexFunction< K , T > Field >
+		auto SquaredL2NormField( Field && F );
+
+		/////////////////////////////////////////////////
+		// Squared L2-difference of two GENERIC fields //
+		/////////////////////////////////////////////////
+		template< unsigned int K , HasDotProduct T , HasSimplexFunction< K , T > Field1 , HasSimplexFunction< K , T > Field2 >
+		auto SquaredL2DifferenceField( Field1 && F1 , Field2 && F2 );
+
+		///////////////////////////////////////
+		// Dot-product of two GENERIC fields //
+		///////////////////////////////////////
+		template< unsigned int K , HasDotProduct T , HasSimplexFunction< K , T > Field1 , HasSimplexFunction< K , T > Field2 >
+		auto DotProductField( Field1 && F1 , Field2 && F2 );
+
+		////////////////////////////////////////////////////////////////////////
+		// Derivation of a GENERIC scalar-field w.r.t. a GENERIC vector-field //
+		////////////////////////////////////////////////////////////////////////
+		template< unsigned int K , HasSimplexFunction< K , Point< double , K > > VectorField , HasSimplexDifferentiableFunction< K , double > ScalarField >
+		auto DerivationField( ScalarField && SF , VectorField && VF );
 
 		////////////////////////////////////////////////////////////////////////////////////
 		// Coefficients of a GENERIC vector-field vector field w.r.t. the coordinate axes //

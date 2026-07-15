@@ -190,9 +190,9 @@ Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::stiffnessMatrix( WeightFi
 
 template< unsigned int K , unsigned int Dim >
 template< unsigned int QuadratureSamples , HasMeshTangentVectorFunction< K > TangentVectorField , HasMeshScaleFactorFunction< K > WeightField >
-Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::derivationSystemMatrix( TangentVectorField && VF , WeightField && WF ) const
+Eigen::SparseMatrix< double > EmbeddedMesh< K , Dim >::derivationMassMatrix( TangentVectorField && VF , WeightField && WF ) const
 {
-	return _systemMatrix< QuadratureSamples >( SimplexProcessing::ArrayWrapper( [&]( size_t sIdx ){ return SimplexProcessing::ScalarSystem< K >::DerivationMatrix( simplexVertices( sIdx ) , VF[sIdx] ); } ) , false , std::forward< WeightField >( WF ) );
+	return _systemMatrix< QuadratureSamples >( SimplexProcessing::ArrayWrapper( [&]( size_t sIdx ){ return SimplexProcessing::ScalarSystem< K >::DerivationMassMatrix( simplexVertices( sIdx ) , VF[sIdx] ); } ) , false , std::forward< WeightField >( WF ) );
 }
 
 template< unsigned int K , unsigned int Dim >

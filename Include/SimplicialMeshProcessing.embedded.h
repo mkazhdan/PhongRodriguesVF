@@ -106,7 +106,7 @@ namespace MishaK
 			Eigen::SparseMatrix< double > stiffnessMatrix( WeightField && WF=UnitWeightField< K >() ) const;
 
 			template< unsigned int QuadratureSamples , HasMeshTangentVectorFunction< K > TangentVectorField , HasMeshScaleFactorFunction< K > WeightField=UnitWeightField< K > >
-			Eigen::SparseMatrix< double > derivationSystemMatrix( TangentVectorField && VF , WeightField && WF=UnitWeightField< K >() ) const;
+			Eigen::SparseMatrix< double > derivationMassMatrix( TangentVectorField && VF , WeightField && WF=UnitWeightField< K >() ) const;
 
 
 			EigenMatrixEntries eigenMatrixEntries( void ) const { return this->template _eigenMatrixEntries< K+1 >( _vertices.size() , elementIndex() ); }

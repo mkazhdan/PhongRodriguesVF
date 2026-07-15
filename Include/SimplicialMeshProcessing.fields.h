@@ -172,6 +172,30 @@ namespace MishaK
 		template< unsigned int K >
 		using PhongRodriguesCovariantDirectionalDerivativeField = EmbeddedPhongMeshField< K , SimplexProcessing::PhongRodriguesCovariantDirectionalDerivativeField< K , K+1 > , Point< double , K+1 > , Point< double , K+1 > >;
 
+		/////////////////////////////////////////////////////////////
+		// Functionality evaluating the squared L2-norm of a field //
+		/////////////////////////////////////////////////////////////
+		template< unsigned int K , SimplexProcessing::HasDotProduct T , HasMeshFunction< K , T > Field >
+		auto SquaredL2NormField( Field && F );
+
+		///////////////////////////////////////////////////////////////////////////
+		// Functionality evaluating the squared L2-difference between two fields //
+		///////////////////////////////////////////////////////////////////////////
+		template< unsigned int K , SimplexProcessing::HasDotProduct T , HasMeshFunction< K , T > Field1 , HasMeshFunction< K , T > Field2 >
+		auto SquaredL2DifferenceField( Field1 && F1 , Field2 && F2 );
+
+		////////////////////////////////////////////////////////////
+		// Functionality evaluating the dot-product of two fields //
+		////////////////////////////////////////////////////////////
+		template< unsigned int K , SimplexProcessing::HasDotProduct T , HasMeshFunction< K , T > Field1 , HasMeshFunction< K , T > Field2 >
+		auto DotProductField( Field1 && F1 , Field2 && F2 );
+
+		////////////////////////////////////////////////////////////////////////////////////
+		// Functionality evaluating the derivation of a scalar-field along a vector-field //
+		////////////////////////////////////////////////////////////////////////////////////
+		template< unsigned int K , HasMeshFunction< K , Point< double , K > > VectorField , HasMeshDifferentiableFunction< K , double > ScalarField >
+		auto DerivationField( ScalarField && SF , VectorField && VF );
+
 #include "SimplicialMeshProcessing.fields.inl"
 	}
 }

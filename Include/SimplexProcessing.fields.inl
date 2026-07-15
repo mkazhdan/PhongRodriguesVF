@@ -26,34 +26,6 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 DAMAGE.
 */
 
-//////////////////////
-// DerivativeTester //
-//////////////////////
-template< unsigned int K , HasDotProduct T >
-template< HasSimplexDifferentiableFunction< K , T > Field >
-double DerivativeTester< K , T >::SquareError( Position< K > p , const Field & field , double delta )
-{
-	double error = 0;
-	for( unsigned int k=0 ; k<K ; k++ )
-	{
-		// The offset positions along the k-th coordinate
-		Point< double , K > _p[] = { p , p };
-		_p[0][k] -= delta , _p[1][k] += delta;
-		T d = ( field( _p[1] ) - field( _p[0] ) ) / ( 2. * delta ) - field.d( p )[k];
-		error += DotProduct( d , d );
-	}
-	return error / K;
-}
-
-template< unsigned int K , HasDotProduct T >
-template< HasSimplexDifferentiableFunction< K , T > Field >
-double DerivativeTester< K , T >::SquareError( const Field & field , unsigned int testCount , double delta )
-{
-	const Simplex< double , K , K > UnitRightSimplex = Simplex< double , K , K >::UnitRight();
-	double error = 0;
-	for( unsigned int c=0 ; c<testCount ; c++ ) error += SquareError( UnitRightSimplex.randomSample() , field , delta );
-	return error / testCount;
-}
 
 ///////////////////////
 // LinearInterpolant //
@@ -323,6 +295,56 @@ ConnectionCoefficientField< K , Symmetrize >::Value
 )
 {
 	return Value( gInv , PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::Value( normal , normals , xForm , p ) , PhongRodriguesIntrinsicToExtrinsicTangentXFormField< K >::DValue( normal , normals , xForm , p ) );
+}
+
+////////////////////////
+// SquaredL2NormField //
+////////////////////////
+template< unsigned int K , HasDotProduct T , HasSimplexFunction< K , T > Field >
+auto SquaredL2NormField( Field && F )
+{
+	return [ f=std::forward< Field >( F ) ]( Position< K > p )
+		{
+			T v = f(p);
+			return DotProduct( v , v );
+		};
+}
+
+//////////////////////////////
+// SquaredL2DifferenceField //
+//////////////////////////////
+template< unsigned int K , HasDotProduct T , HasSimplexFunction< K , T > Field1 , HasSimplexFunction< K , T > Field2 >
+auto SquaredL2DifferenceField( Field1 && F1 , Field2 && F2 )
+{
+	return [ f1=std::forward< Field1 >( F1 ) , f2=std::forward< Field2 >( F2 ) ]( Position< K > p )
+		{
+			T v1 = f1(p) , v2 = f2(p);
+			return DotProduct( v1 , v1 ) + DotProduct( v2 , v2 ) - 2 * DotProduct( v1 , v2 );
+		};
+}
+
+/////////////////////
+// DotProductField //
+/////////////////////
+template< unsigned int K , HasDotProduct T , HasSimplexFunction< K , T > Field1 , HasSimplexFunction< K , T > Field2 >
+auto DotProductField( Field1 && F1 , Field2 && F2 )
+{
+	return [ f1=std::forward< Field1 >( F1 ) , f2=std::forward< Field2 >( F2 ) ]( Position< K > p )
+		{
+			return DotProduct( f1(p) , f2(p) );
+		};
+}
+
+/////////////////////
+// DerivationField //
+/////////////////////
+template< unsigned int K , HasSimplexFunction< K , Point< double , K > > VectorField , HasSimplexDifferentiableFunction< K , double > ScalarField >
+auto DerivationField( ScalarField && SF , VectorField && VF )
+{
+	return [ sf=std::forward< ScalarField >( SF ) , vf=std::forward< VectorField >( VF ) ]( Position< K > p )
+		{
+			return Point< double , K >::Dot( sf.d(p) , vf(p) );
+		};
 }
 
 //////////////////////////
