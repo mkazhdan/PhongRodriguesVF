@@ -282,16 +282,19 @@ Eigen::SparseMatrix< double > EmbeddedPhongMesh< K >::tangentProlongation( void 
 
 		for( unsigned int d=1 ; d<K ; d++ )
 		{
-			frame[d] = RandomSpherePoint< double , Dim >();
-			while( true )
+			// Pick the coordinate axis with the largest residual after projection.
+			// The tangent basis is arbitrary; a deterministic, well-conditioned choice
+			// avoids both shared rand() calls in parallel and nearly parallel seeds.
+			double maxNorm2 = -1.;
+			for( unsigned int axis=0 ; axis<Dim ; axis++ )
 			{
-				for( unsigned int dd=0 ; dd<d ; dd++ ) frame[d] -= Point< double , Dim >::Dot( frame[dd] , frame[d] ) * frame[dd];
-				if( frame[d].squareNorm()>1e-10 )
-				{
-					frame[d] /= sqrt( frame[d].squareNorm() );
-					break;
-				}
+				Point< double , Dim > candidate;
+				candidate[axis] = 1.;
+				for( unsigned int dd=0 ; dd<d ; dd++ ) candidate -= Point< double , Dim >::Dot( frame[dd] , candidate ) * frame[dd];
+				double norm2 = candidate.squareNorm();
+				if( norm2>maxNorm2 ) maxNorm2 = norm2 , frame[d] = candidate;
 			}
+			frame[d] /= sqrt( maxNorm2 );
 		}
 		frame[K] = Point< double , Dim >::CrossProduct( frame );
 	};
